@@ -39,10 +39,23 @@ mod tests {
     #[test]
     fn do_you_even_lift() {
         let times_two = |x: i32| x * 2;
+        let times_two_ref = |x: &i32| x * 2;
 
-        let mut lifted = lift::<Option<i32>, _, _>(times_two);
+        fn plus_one(x: i32) -> i32 {
+            x + 1
+        }
 
-        let value = Some(1i32);
-        assert_eq!(lifted(value), Some(2))
+        let mut lifted_times_two = lift(times_two);
+        let mut lifted_plus_one = lift(plus_one);
+
+        let value = Some(2i32);
+        assert_eq!(lifted_times_two(value), Some(4));
+        {
+            // needs new scope to make sure the lifted function
+            // does not outlive the parameter
+            let mut lifted_times_two_ref = lift(times_two_ref);
+            assert_eq!(lifted_times_two_ref(value.as_ref()), Some(4));
+        }
+        assert_eq!(lifted_plus_one(value), Some(3));
     }
 }
