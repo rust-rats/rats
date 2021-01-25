@@ -1,5 +1,22 @@
+use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
+
 pub trait Semigroup {
     fn combine(self, b: Self) -> Self;
+}
+
+impl<K: Eq + Hash, V> Semigroup for HashMap<K, V> {
+    fn combine(mut self, b: Self) -> Self {
+        self.extend(b);
+        self
+    }
+}
+
+impl<A: Eq + Hash> Semigroup for HashSet<A> {
+    fn combine(mut self, b: Self) -> Self {
+        self.extend(b);
+        self
+    }
 }
 
 impl<A> Semigroup for Vec<A> {
@@ -30,24 +47,73 @@ impl<A: Semigroup, E> Semigroup for Result<A, E> {
     }
 }
 
+impl Semigroup for String {
+    fn combine(mut self, b: Self) -> Self {
+        self.push_str(&b);
+        self
+    }
+}
+
+impl Semigroup for () {
+    fn combine(self, _: Self) -> Self {
+        ()
+    }
+}
+
 macro_rules! impl_semigroup {
-    ($t:ident) => {
+    ($($t:ty),*) => {$(
         impl Semigroup for $t {
             fn combine(self, b: Self) -> Self {
                 self + b
             }
         }
-    };
+    )*};
 }
 
-impl_semigroup!(i8);
-impl_semigroup!(i16);
-impl_semigroup!(i32);
-impl_semigroup!(i64);
-impl_semigroup!(u8);
-impl_semigroup!(u16);
-impl_semigroup!(u32);
-impl_semigroup!(u64);
-impl_semigroup!(usize);
-impl_semigroup!(f32);
-impl_semigroup!(f64);
+impl_semigroup!(i8, i16, i32, i64, u8, u16, u32, u64, usize, f32, f64);
+
+#[cfg(test)]
+mod laws {
+
+    macro_rules! semigroup_associativity {
+        ($($t:ty),*) => {$(
+            paste::paste! {
+                semigroup_associativity!([<associativity_ $t>]: $t);
+            }
+        )*};
+        ($name:ident: $t:ty) => {
+            #[allow(non_snake_case)]
+            #[quickcheck]
+            fn $name(n1: $t, n2: $t, n3: $t) {
+                use crate::kernel::semigroup::*;
+                let n1_copy = n1.clone();
+                let n2_copy = n2.clone();
+                let n3_copy = n3.clone();
+
+                assert_eq!(n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy))
+            }
+        };
+    }
+
+    mod associativity {
+        use std::collections::{HashMap, HashSet};
+
+        type VecUsize = Vec<usize>;
+        type SetUsize = HashSet<usize>;
+        type HashMapUsizeUsize = HashMap<usize, usize>;
+        type OptionUsize = Option<usize>;
+        type ResultUsizeUsize = Result<usize, usize>;
+        type Unit = ();
+        semigroup_associativity!(
+            usize,
+            u64,
+            String,
+            Unit,
+            VecUsize,
+            SetUsize,
+            HashMapUsizeUsize,
+            OptionUsize,
+            ResultUsizeUsize
+        );
+    }
+}
