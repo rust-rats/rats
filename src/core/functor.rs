@@ -4,7 +4,7 @@ pub trait Functor {
     type Inner;
     type Outter<B>: Functor;
 
-    fn map<F, B>(self, f: F) -> Self::Outter<B>
+    fn fmap<F, B>(self, f: F) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B;
 }
@@ -13,7 +13,7 @@ impl<A> Functor for Option<A> {
     type Inner = A;
     type Outter<B> = Option<B>;
 
-    fn map<F, B>(self, mut f: F) -> Self::Outter<B>
+    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B,
     {
@@ -28,7 +28,7 @@ impl<A, E> Functor for Result<A, E> {
     type Inner = A;
     type Outter<B> = Result<B, E>;
 
-    fn map<F, B>(self, mut f: F) -> Self::Outter<B>
+    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B,
     {
@@ -43,7 +43,7 @@ impl<A> Functor for Vec<A> {
     type Inner = A;
     type Outter<B> = Vec<B>;
 
-    fn map<F, B>(self, f: F) -> Self::Outter<B>
+    fn fmap<F, B>(self, f: F) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B,
     {
@@ -56,7 +56,7 @@ impl<A> Functor for Id<A> {
 
     type Outter<B> = Id<B>;
 
-    fn map<F, B>(self, mut f: F) -> Self::Outter<B>
+    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B,
     {
@@ -69,7 +69,7 @@ impl<A> Functor for Id<A> {
 //     type Inner = A;
 //     type Outter<B> = HashSet<B>;
 
-//     fn map<F, B>(self, f: F) -> Self::Outter<B>
+//     fn fmap<F, B>(self, f: F) -> Self::Outter<B>
 //     where
 //         F: FnMut(Self::Inner) -> B,
 //     {
@@ -77,37 +77,10 @@ impl<A> Functor for Id<A> {
 //     }
 // }
 
-pub trait Bifunctor {
-    type Inner1;
-    type Inner2;
-    type Outter<B1, C1>: Bifunctor;
-
-    fn bimap<F1, F2, B, C>(self, f1: F1, f2: F2) -> Self::Outter<B, C>
-    where
-        F1: FnMut(Self::Inner1) -> B,
-        F2: FnMut(Self::Inner2) -> C;
-}
-
-impl<T1, T2> Bifunctor for (T1, T2) {
-    type Inner1 = T1;
-
-    type Inner2 = T2;
-
-    type Outter<B, C> = (B, C);
-
-    fn bimap<F1, F2, B, C>(self, mut f1: F1, mut f2: F2) -> Self::Outter<B, C>
-    where
-        F1: FnMut(Self::Inner1) -> B,
-        F2: FnMut(Self::Inner2) -> C,
-    {
-        (f1(self.0), f2(self.1))
-    }
-}
-
 pub fn lift<A: Functor, B>(
     fun: impl FnMut(<A as Functor>::Inner) -> B + Copy,
 ) -> impl FnMut(A) -> <A as Functor>::Outter<B> {
-    move |a: A| a.map(fun)
+    move |a: A| a.fmap(fun)
 }
 
 #[cfg(test)]
@@ -164,7 +137,7 @@ mod laws {
                 use std::convert::identity;
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f64, n1.map(identity), n1_copy, F64Margin::default()))
+                assert!(approx_eq!(f64, n1.fmap(identity), n1_copy, F64Margin::default()))
             }
         };
         ($name:ident: f32) => {
@@ -176,7 +149,7 @@ mod laws {
                 use std::convert::identity;
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f32, n1.map(identity), n1_copy, F32Margin::default()))
+                assert!(approx_eq!(f32, n1.fmap(identity), n1_copy, F32Margin::default()))
             }
         };
         ($name:ident: $t:ty) => {
@@ -187,10 +160,60 @@ mod laws {
                 use std::convert::identity;
                 let n1_copy = n1.clone();
 
-                assert_eq!(n1.map(identity), n1_copy)
+                assert_eq!(n1.fmap(identity), n1_copy)
             }
         };
     }
+
+    macro_rules! composition_identity_id {
+        ($($t:ty),*) => {$(
+            paste::paste! {
+                composition_identity_id!([<composition_identity_ $t>]: $t);
+            }
+        )*};
+        ($name:ident: f64) => {
+            #[allow(non_snake_case, unused_imports)]
+            #[quickcheck]
+            fn $name(n1: Id<f64>) {
+                use crate::core::prelude::*;
+                use float_cmp::{approx_eq, F64Margin};
+                use std::convert::identity;
+                let f1 = |a: f64| a * 2f64;
+                let f2 = |a: f64| a * 3f64;
+                let n1_copy = n1.clone();
+
+                assert!(approx_eq!(f64, n1.fmap(f1).fmap(f2).into_value(), n1_copy.fmap(|a| f2(f1(a))).into_value(), F64Margin::default()))
+            }
+        };
+        ($name:ident: f32) => {
+            #[allow(non_snake_case, unused_imports)]
+            #[quickcheck]
+            fn $name(n1: Id<f32>) {
+                use crate::core::prelude::*;
+                use float_cmp::{approx_eq, F32Margin};
+                use std::convert::identity;
+                let f1 = |a: f32| a * 2f32;
+                let f2 = |a: f32| a * 3f32;
+                let n1_copy = n1.clone();
+
+                assert!(approx_eq!(f32, n1.fmap(f1).fmap(f2).into_value(), n1_copy.fmap(|a| f2(f1(a))).into_value(), F32Margin::default()))
+            }
+        };
+        ($name:ident: $t:ty) => {
+            #[allow(non_snake_case, unused_imports)]
+            #[quickcheck]
+            fn $name(n1: Id<$t>) {
+                use crate::core::prelude::*;
+                use std::convert::identity;
+                let f1 = |a: $t| a * 2;
+                let f2 = |a: $t| a * 3;
+                let n1_copy = n1.clone();
+
+                assert_eq!(n1.fmap(f1).fmap(f2), n1_copy.fmap(|a| f2(f1(a))))
+            }
+        };
+    }
+
     mod preserve_identity {
         use super::*;
 
@@ -204,5 +227,39 @@ mod laws {
         );
     }
 
-    mod composition_identity {}
+    mod composition_identity {
+        use super::*;
+
+        composition_identity_id!(f32, f64, usize);
+
+        #[quickcheck]
+        fn composition_identity_vec_usize(vec: Vec<usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: usize| a * 2;
+            let f2 = |a: usize| a * 3;
+            let vec_copy = vec.clone();
+
+            assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(f1(a))))
+        }
+
+        #[quickcheck]
+        fn composition_identity_option_usize(opt: Option<usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: usize| a * 2;
+            let f2 = |a: usize| a * 3;
+            let opt_copy = opt;
+
+            assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(f1(a))))
+        }
+
+        #[quickcheck]
+        fn composition_identity_result_usize_usize(res: Result<usize, usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: usize| a * 2;
+            let f2 = |a: usize| a * 3;
+            let res_copy = res;
+
+            assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(f1(a))))
+        }
+    }
 }
