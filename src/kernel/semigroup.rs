@@ -81,6 +81,32 @@ mod laws {
                 semigroup_associativity!([<associativity_ $t>]: $t);
             }
         )*};
+        ($name:ident: f64) => {
+            #[allow(non_snake_case)]
+            #[quickcheck]
+            fn $name(n1: f64, n2: f64, n3: f64) {
+                use crate::kernel::semigroup::*;
+                use float_cmp::{approx_eq, F64Margin};
+                let n1_copy = n1.clone();
+                let n2_copy = n2.clone();
+                let n3_copy = n3.clone();
+
+                assert!(approx_eq!(f64, n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy), F64Margin::default()))
+            }
+        };
+        ($name:ident: f32) => {
+            #[allow(non_snake_case)]
+            #[quickcheck]
+            fn $name(n1: f32, n2: f32, n3: f32) {
+                use crate::kernel::semigroup::*;
+                use float_cmp::{approx_eq, F32Margin};
+                let n1_copy = n1.clone();
+                let n2_copy = n2.clone();
+                let n3_copy = n3.clone();
+
+                assert!(approx_eq!(f32, n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy), F32Margin::default()))
+            }
+        };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case)]
             #[quickcheck]
@@ -108,6 +134,8 @@ mod laws {
             usize,
             u64,
             String,
+            // f32, TODO handle this
+            // f64, TODO handle this
             Unit,
             VecUsize,
             SetUsize,
