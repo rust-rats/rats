@@ -55,9 +55,7 @@ impl Semigroup for String {
 }
 
 impl Semigroup for () {
-    fn combine(self, _: Self) -> Self {
-        ()
-    }
+    fn combine(self, _: Self) -> Self {}
 }
 
 macro_rules! impl_semigroup {
