@@ -6,6 +6,6 @@ inspired. The goal is to have a similar ecosystem to Cats, so hopefully we will 
 to [cats-effect](https://typelevel.org/cats-effect/)
 
 Currently the library depends on the nightly compiler for support of Generalized Associated Types.
-[See this rust issue for more details]](https://github.com/rust-lang/rust/issues/44265)
+See this rust issue for more details](https://github.com/rust-lang/rust/issues/44265)
 
 The initial design of the categories is based on [this blog post](https://www.fpcomplete.com/blog/monads-gats-nightly-rust/).
