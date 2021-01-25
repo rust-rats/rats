@@ -1,5 +1,4 @@
 # Rats
-
 Rats is a library that provides abstractions for functional programming in Rust. 
 
 The name is a play on the Scala library [Cats](https://typelevel.org/cats/), which the design of this library is 
