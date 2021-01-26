@@ -1,20 +1,35 @@
 use super::functor::Functor;
+use crate::kernel::prelude::Id;
 
-pub trait Pointed : Functor {
-    fn wrap<B>(b: B) -> Self::Outter<B>;
+pub trait Apply : Functor {
+    fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
+    where
+        F: FnMut(Self::Inner) -> B;
 }
 
-impl<A> Pointed for Option<A> {
-    fn wrap<B>(b: B) -> Self::Outter<B> {
-        Some(b)
-    }
-}
-
-pub trait Apply : Pointed {
-    fn apply<B, F>(a: Self::Inner, mut f: F) -> Self::Outter<B>
+impl<A> Apply for Option<A> {
+    fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
     where
         F: FnMut(Self::Inner) -> B
     {
-        Self::wrap(f(a))
+        self.fmap(f?)
+    }
+}
+
+impl<A, E> Apply for Result<A, E> {
+    fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
+        where
+            F: FnMut(Self::Inner) -> B
+    {
+        self.fmap(f?)
+    }
+}
+
+impl<A> Apply for Id<A> {
+    fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
+        where
+            F: FnMut(Self::Inner) -> B
+    {
+        self.fmap(f.into_value())
     }
 }
