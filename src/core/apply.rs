@@ -121,4 +121,15 @@ mod tests {
         let function = to_err(function, ());
         assert_eq!(result.apply(function), Err(()));
     }
+
+    #[test]
+    fn id() {
+        use crate::kernel::prelude::Id;
+
+        let id = Id(3);
+        let function = Id(|x : u64| -> f32 {
+            (x*x) as f32
+        });
+        assert_eq!(id.apply(function), Id(9.0));
+    }
 }
