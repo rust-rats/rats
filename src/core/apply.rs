@@ -79,4 +79,46 @@ mod tests {
         let function = to_none(function);
         assert_eq!(option.apply(function), None);
     }
+
+    fn to_err<T, E>(_ : Result<T, E>, e: E) -> Result<T, E> {
+        Err(e)
+    }
+
+    #[test]
+    fn result_ok_ok() {
+        let result : Result<u64, ()> = Ok(3);
+        let function = Ok(|x : u64| -> f32 {
+            (x*x) as f32
+        });
+        assert_eq!(result.apply(function), Ok(9.0));
+    }
+
+    #[test]
+    fn result_ok_err() {
+        let result : Result<u64, ()> = Ok(3);
+        let function = Ok(|x : u64| -> f32 {
+            (x*x) as f32
+        });
+        let function = to_err(function, ());
+        assert_eq!(result.apply(function), Err(()));
+    }
+
+    #[test]
+    fn result_err_ok() {
+        let result = Err(());
+        let function = Ok(|x : u64| -> f32 {
+            (x*x) as f32
+        });
+        assert_eq!(result.apply(function), Err(()));
+    }
+
+    #[test]
+    fn result_err_err() {
+        let result = Err(());
+        let function = Ok(|x : u64| -> f32 {
+            (x*x) as f32
+        });
+        let function = to_err(function, ());
+        assert_eq!(result.apply(function), Err(()));
+    }
 }
