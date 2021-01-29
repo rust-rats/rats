@@ -19,7 +19,7 @@ pub mod helpers {
 
     #[cfg(test)]
     impl<T: quickcheck::Arbitrary + Clone> quickcheck::Arbitrary for Id<T> {
-        fn arbitrary<G: quickcheck::Gen>(g: &mut G) -> Self {
+        fn arbitrary(g: &mut quickcheck::Gen) -> Self {
             Id(T::arbitrary(g))
         }
     }
