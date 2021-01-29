@@ -58,17 +58,28 @@ impl Semigroup for () {
     fn combine(self, _: Self) -> Self {}
 }
 
-macro_rules! impl_semigroup {
+macro_rules! impl_semigroup_wrapping {
     ($($t:ty),*) => {$(
         impl Semigroup for $t {
             fn combine(self, b: Self) -> Self {
-                self + b
+                self.wrapping_add(b)
             }
         }
     )*};
 }
 
-impl_semigroup!(i8, i16, i32, i64, u8, u16, u32, u64, usize, f32, f64);
+impl Semigroup for f32 {
+    fn combine(self, b: f32) -> Self {
+        self + b
+    }
+}
+impl Semigroup for f64 {
+    fn combine(self, b: f64) -> Self {
+        self + b
+    }
+}
+
+impl_semigroup_wrapping!(i8, i16, i32, i64, u8, u16, u32, u64, usize);
 
 #[cfg(test)]
 mod laws {
@@ -82,39 +93,53 @@ mod laws {
         ($name:ident: f64) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f64, n2: f64, n3: f64) {
+            fn $name(n1: f64, n2: f64, n3: f64) -> bool {
                 use crate::kernel::semigroup::*;
                 use float_cmp::{approx_eq, F64Margin};
                 let n1_copy = n1.clone();
                 let n2_copy = n2.clone();
                 let n3_copy = n3.clone();
 
-                assert!(approx_eq!(f64, n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy), F64Margin::default()))
+                let left = n1.combine(n2.combine(n3));
+                let right = n1_copy.combine(n2_copy).combine(n3_copy);
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f64, left, right, F64Margin::default())
+                }
             }
         };
         ($name:ident: f32) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f32, n2: f32, n3: f32) {
+            fn $name(n1: f32, n2: f32, n3: f32) -> bool {
                 use crate::kernel::semigroup::*;
                 use float_cmp::{approx_eq, F32Margin};
                 let n1_copy = n1.clone();
                 let n2_copy = n2.clone();
                 let n3_copy = n3.clone();
 
-                assert!(approx_eq!(f32, n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy), F32Margin::default()))
+                let left = n1.combine(n2.combine(n3));
+                let right = n1_copy.combine(n2_copy).combine(n3_copy);
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f32, left, right, F32Margin::default())
+                }
             }
         };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: $t, n2: $t, n3: $t) {
+            fn $name(n1: $t, n2: $t, n3: $t) -> bool {
                 use crate::kernel::semigroup::*;
                 let n1_copy = n1.clone();
                 let n2_copy = n2.clone();
                 let n3_copy = n3.clone();
 
-                assert_eq!(n1.combine(n2.combine(n3)), n1_copy.combine(n2_copy).combine(n3_copy))
+                n1.combine(n2.combine(n3)) == n1_copy.combine(n2_copy).combine(n3_copy)
             }
         };
     }
