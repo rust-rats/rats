@@ -25,6 +25,21 @@ impl<A, E> Apply for Result<A, E> {
     }
 }
 
+impl<A : Clone> Apply for Vec<A> {
+    fn apply<B, F>(self, mut f: Self::Outter<F>) -> Self::Outter<B>
+        where
+            F: FnMut(Self::Inner) -> B
+    {
+        self.into_iter().flat_map(|value| -> Self::Outter<B> {
+            let mut applied_values = Vec::with_capacity(f.len());
+            for function in f.iter_mut() {
+                applied_values.push(function(value.clone()));
+            };
+            applied_values
+        }).collect()
+    }
+}
+
 impl<A> Apply for Id<A> {
     fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
         where
@@ -131,5 +146,30 @@ mod tests {
             (x*x) as f32
         });
         assert_eq!(id.apply(function), Id(9.0));
+    }
+
+    #[test]
+    fn vec() {
+        let values = vec![1, 2, 3, 4];
+        // fn zero(_x : u64) -> f32 { 0.0 }
+        // fn successor(x : u64) -> f32 { (x+1) as f32 }
+        // fn square(x : u64) -> f32 { (x*x) as f32 }
+        // let functions = vec![
+        //     |x : u64| -> f32 { 0.0 },
+        //     |x : u64| -> f32 { (x+1) as f32 },
+        //     |x : u64| -> f32 { (x*x) as f32 }
+        // ];
+        let functions = vec![
+            |x : u64| -> f32 { (x*x) as f32 }
+        ];
+        // let functions = vec![
+        //     zero,
+        //     successor,
+        //     square
+        // ];
+        let expected = vec![
+            1.0, 4.0, 9.0, 16.0,
+        ];
+        assert_eq!(values.apply(functions), expected);
     }
 }
