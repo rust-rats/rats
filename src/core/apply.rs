@@ -151,22 +151,9 @@ mod tests {
     #[test]
     fn vec() {
         let values = vec![1, 2, 3, 4];
-        // fn zero(_x : u64) -> f32 { 0.0 }
-        // fn successor(x : u64) -> f32 { (x+1) as f32 }
-        // fn square(x : u64) -> f32 { (x*x) as f32 }
-        // let functions = vec![
-        //     |x : u64| -> f32 { 0.0 },
-        //     |x : u64| -> f32 { (x+1) as f32 },
-        //     |x : u64| -> f32 { (x*x) as f32 }
-        // ];
         let functions = vec![
             |x : u64| -> f32 { (x*x) as f32 }
         ];
-        // let functions = vec![
-        //     zero,
-        //     successor,
-        //     square
-        // ];
         let expected = vec![
             1.0, 4.0, 9.0, 16.0,
         ];
