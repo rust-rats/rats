@@ -56,6 +56,9 @@ mod tests {
     fn folding_consistent_with_sum(x: Vec<i32>) {
         let cloned = x.clone();
 
-        assert_eq!(x.folding(), cloned.iter().sum())
+        assert_eq!(
+            x.folding(),
+            cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
+        )
     }
 }
