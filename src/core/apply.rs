@@ -136,7 +136,7 @@ mod tests {
     fn vec() {
         let values = vec![1, 2, 3, 4];
         let functions = vec![
-            Box::new(|x: u64| -> f32 { 0.0 }) as Box<dyn Fn(u64) -> f32>,
+            Box::new(|_x: u64| -> f32 { 0.0 }) as Box<dyn Fn(u64) -> f32>,
             Box::new(|x: u64| -> f32 { (x + 1) as f32 }) as Box<dyn Fn(u64) -> f32>,
             Box::new(|x: u64| -> f32 { (x * x) as f32 }) as Box<dyn Fn(u64) -> f32>,
         ];
