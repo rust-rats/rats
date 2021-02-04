@@ -76,6 +76,7 @@ impl<A> Functor for Id<A> {
 //         self.into_iter().map(f).collect()
 //     }
 // }
+//
 
 pub fn lift<A: Functor, B>(
     fun: impl FnMut(<A as Functor>::Inner) -> B + Copy,
@@ -118,7 +119,6 @@ mod laws {
     type OptionUsize = Option<usize>;
     type IdUsize = Id<usize>;
     type ResultUsizeUsize = Result<usize, usize>;
-    type Idf64 = Id<f64>;
     type VecUsize = Vec<usize>;
     type IdUnit = Id<()>;
 
@@ -128,39 +128,18 @@ mod laws {
                 preserve_identity!([<preserve_identity_ $t>]: $t);
             }
         )*};
-        ($name:ident: f64) => {
-            #[allow(non_snake_case)]
-            #[quickcheck]
-            fn $name(n1: f64) {
-                use crate::core::prelude::*;
-                use float_cmp::{approx_eq, F64Margin};
-                use std::convert::identity;
-                let n1_copy = n1.clone();
-
-                assert!(approx_eq!(f64, n1.fmap(identity), n1_copy, F64Margin::default()))
-            }
-        };
-        ($name:ident: f32) => {
-            #[allow(non_snake_case)]
-            #[quickcheck]
-            fn $name(n1: f32) {
-                use crate::core::prelude::*;
-                use float_cmp::{approx_eq, F32Margin};
-                use std::convert::identity;
-                let n1_copy = n1.clone();
-
-                assert!(approx_eq!(f32, n1.fmap(identity), n1_copy, F32Margin::default()))
-            }
-        };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case, unused_imports)]
             #[quickcheck]
-            fn $name(n1: $t) {
+            fn $name(n1: $t) -> bool {
                 use crate::core::prelude::*;
                 use std::convert::identity;
                 let n1_copy = n1.clone();
 
-                assert_eq!(n1.fmap(identity), n1_copy)
+                let left = n1.fmap(identity);
+                let right = n1_copy;
+
+                left == right
             }
         };
     }
@@ -174,42 +153,60 @@ mod laws {
         ($name:ident: f64) => {
             #[allow(non_snake_case, unused_imports)]
             #[quickcheck]
-            fn $name(n1: Id<f64>) {
+            fn $name(n1: Id<f64>) -> bool {
                 use crate::core::prelude::*;
                 use float_cmp::{approx_eq, F64Margin};
                 use std::convert::identity;
-                let f1 = |a: f64| a * 2f64;
-                let f2 = |a: f64| a * 3f64;
+                let f1 = |a: f64| (a / 5.) * 2f64;
+                let f2 = |a: f64| (a / 5.) * 3f64;
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f64, n1.fmap(f1).fmap(f2).into_value(), n1_copy.fmap(|a| f2(f1(a))).into_value(), F64Margin::default()))
+                let left = n1.fmap(f1).fmap(f2).into_value();
+                let right = n1_copy.fmap(|a| f2(f1(a))).into_value();
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f64, left, right, F64Margin::default())
+                }
+
             }
         };
         ($name:ident: f32) => {
             #[allow(non_snake_case, unused_imports)]
             #[quickcheck]
-            fn $name(n1: Id<f32>) {
+            fn $name(n1: Id<f32>) -> bool {
                 use crate::core::prelude::*;
                 use float_cmp::{approx_eq, F32Margin};
                 use std::convert::identity;
-                let f1 = |a: f32| a * 2f32;
-                let f2 = |a: f32| a * 3f32;
+                let f1 = |a: f32| (a / 5.) * 2f32;
+                let f2 = |a: f32| (a / 5.) * 3f32;
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f32, n1.fmap(f1).fmap(f2).into_value(), n1_copy.fmap(|a| f2(f1(a))).into_value(), F32Margin::default()))
+                let left = n1.fmap(f1).fmap(f2).into_value();
+                let right = n1_copy.fmap(|a| f2(f1(a))).into_value();
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f32, left, right, F32Margin::default())
+                }
             }
         };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case, unused_imports)]
             #[quickcheck]
-            fn $name(n1: Id<$t>) {
+            fn $name(n1: Id<$t>) -> bool {
                 use crate::core::prelude::*;
                 use std::convert::identity;
-                let f1 = |a: $t| a * 2;
-                let f2 = |a: $t| a * 3;
+                let f1 = |a: $t| (a / 5) * 2;
+                let f2 = |a: $t| (a / 5) * 3;
                 let n1_copy = n1.clone();
 
-                assert_eq!(n1.fmap(f1).fmap(f2), n1_copy.fmap(|a| f2(f1(a))))
+                let left = n1.fmap(f1).fmap(f2);
+                let right = n1_copy.fmap(|a| f2(f1(a)));
+
+                left == right
             }
         };
     }
@@ -217,26 +214,19 @@ mod laws {
     mod preserve_identity {
         use super::*;
 
-        preserve_identity!(
-            OptionUsize,
-            IdUsize,
-            ResultUsizeUsize,
-            Idf64,
-            VecUsize,
-            IdUnit
-        );
+        preserve_identity!(OptionUsize, IdUsize, ResultUsizeUsize, VecUsize, IdUnit);
     }
 
     mod composition_identity {
         use super::*;
 
-        composition_identity_id!(f32, f64, usize);
+        composition_identity_id!(i32, i64, usize);
 
         #[quickcheck]
         fn composition_identity_vec_usize(vec: Vec<usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| a * 2;
-            let f2 = |a: usize| a * 3;
+            let f1 = |a: usize| (a / 5) * 2;
+            let f2 = |a: usize| (a / 5) * 3;
             let vec_copy = vec.clone();
 
             assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(f1(a))))
@@ -245,8 +235,8 @@ mod laws {
         #[quickcheck]
         fn composition_identity_option_usize(opt: Option<usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| a * 2;
-            let f2 = |a: usize| a * 3;
+            let f1 = |a: usize| (a / 5) * 2;
+            let f2 = |a: usize| (a / 5) * 3;
             let opt_copy = opt;
 
             assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(f1(a))))
@@ -255,8 +245,8 @@ mod laws {
         #[quickcheck]
         fn composition_identity_result_usize_usize(res: Result<usize, usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| a * 2;
-            let f2 = |a: usize| a * 3;
+            let f1 = |a: usize| (a / 5) * 2;
+            let f2 = |a: usize| (a / 5) * 3;
             let res_copy = res;
 
             assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(f1(a))))

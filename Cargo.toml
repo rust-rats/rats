@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 
 [dev-dependencies]
-quickcheck = "0.9"
-quickcheck_macros = "0.9"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
 paste = "1.0.4"
 float-cmp = "0.8.0"

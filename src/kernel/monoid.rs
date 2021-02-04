@@ -77,33 +77,47 @@ mod laws {
         ($name:ident: f64) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f64) {
+            fn $name(n1: f64) -> bool {
                 use crate::kernel::prelude::*;
                 use float_cmp::{approx_eq, F64Margin};
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f64, <f64 as Monoid>::empty().combine(n1), n1_copy, F64Margin::default()))
+                let left = <f64 as Monoid>::empty().combine(n1);
+                let right = n1_copy;
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f64, left, right, F64Margin::default())
+                }
             }
         };
         ($name:ident: f32) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f32) {
+            fn $name(n1: f32) -> bool {
                 use crate::kernel::prelude::*;
                 use float_cmp::{approx_eq, F32Margin};
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f32, <f32 as Monoid>::empty().combine(n1), n1_copy, F32Margin::default()))
+                let left = <f32 as Monoid>::empty().combine(n1);
+                let right = n1_copy;
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f32, left, right, F32Margin::default())
+                }
             }
         };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: $t) {
+            fn $name(n1: $t) -> bool {
                 use crate::kernel::prelude::*;
                 let n1_copy = n1.clone();
 
-                assert_eq!(<$t as Monoid>::empty().combine(n1), n1_copy)
+                <$t as Monoid>::empty().combine(n1) == n1_copy
             }
         };
     }
@@ -117,33 +131,47 @@ mod laws {
         ($name:ident: f64) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f64) {
+            fn $name(n1: f64) -> bool {
                 use crate::kernel::prelude::*;
                 use float_cmp::{approx_eq, F64Margin};
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f64, <f64 as Monoid>::empty().combine(n1), n1_copy, F64Margin::default()))
+                let left = <f64 as Monoid>::empty().combine(n1);
+                let right = n1_copy;
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f64, left, right, F64Margin::default())
+                }
             }
         };
         ($name:ident: f32) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: f32) {
+            fn $name(n1: f32) -> bool {
                 use crate::kernel::prelude::*;
                 use float_cmp::{approx_eq, F32Margin};
                 let n1_copy = n1.clone();
 
-                assert!(approx_eq!(f32, <f32 as Monoid>::empty().combine(n1), n1_copy, F32Margin::default()))
+                let left = <f32 as Monoid>::empty().combine(n1);
+                let right = n1_copy;
+
+                if left.is_nan() && right.is_nan() {
+                    true
+                } else {
+                    approx_eq!(f32, left, right, F32Margin::default())
+                }
             }
         };
         ($name:ident: $t:ty) => {
             #[allow(non_snake_case)]
             #[quickcheck]
-            fn $name(n1: $t) {
+            fn $name(n1: $t) -> bool {
                 use crate::kernel::prelude::*;
                 let n1_copy = n1.clone();
 
-                assert_eq!(n1.combine(<$t as Monoid>::empty()), n1_copy)
+                n1.combine(<$t as Monoid>::empty()) == n1_copy
             }
         };
     }
