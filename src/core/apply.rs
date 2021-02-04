@@ -135,8 +135,20 @@ mod tests {
     #[test]
     fn vec() {
         let values = vec![1, 2, 3, 4];
-        let functions = vec![|x: u64| -> f32 { (x * x) as f32 }];
-        let expected = vec![1.0, 4.0, 9.0, 16.0];
-        assert_eq!(values.apply(functions), expected);
+        let functions = vec![
+            Box::new(|x: u64| -> f32 { 0.0 }) as Box<dyn Fn(u64) -> f32>,
+            Box::new(|x: u64| -> f32 { (x + 1) as f32 }) as Box<dyn Fn(u64) -> f32>,
+            Box::new(|x: u64| -> f32 { (x * x) as f32 }) as Box<dyn Fn(u64) -> f32>,
+        ];
+        #[rustfmt::skip]
+        let expected = vec![
+          //0.0, x+1, x*x
+            0.0, 2.0, 1.0,
+            0.0, 3.0, 4.0,
+            0.0, 4.0, 9.0,
+            0.0, 5.0, 16.0,
+        ];
+        let actual = values.apply(functions);
+        assert_eq!(actual, expected);
     }
 }
