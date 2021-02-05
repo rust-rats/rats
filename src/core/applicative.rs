@@ -44,11 +44,11 @@ impl<A, E> ApplicativeError for Result<A, E> {
 
     fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
     where
-        F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>
+        F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
     {
         match self {
             Err(e) => f(e),
-            _ => self
+            _ => self,
         }
     }
 
@@ -61,12 +61,12 @@ impl<A> ApplicativeError for Option<A> {
     type ErrorT = ();
 
     fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
-        where
-            F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>
+    where
+        F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
     {
         match self {
             None => f(()),
-            _ => self
+            _ => self,
         }
     }
 
@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn handle_error_with_for_result() {
         let value = Err(());
-        let handler = |_err| { Ok(3) };
+        let handler = |_err| Ok(3);
         assert_eq!(value.handle_error_with(handler), Ok(3));
     }
 
@@ -121,7 +121,7 @@ mod tests {
     #[test]
     fn handle_error_with_for_option() {
         let value = None;
-        let handler = |_| { Some(3) };
+        let handler = |_| Some(3);
         assert_eq!(value.handle_error_with(handler), Some(3));
     }
 
