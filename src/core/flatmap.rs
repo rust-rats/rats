@@ -18,8 +18,8 @@ impl<A> FlatMap for Option<A> {
 
 impl<A, E> FlatMap for Result<A, E> {
     fn flat_map<B, F>(self, mut f: F) -> Self::Outter<B>
-        where
-            F: FnMut(Self::Inner) -> Self::Outter<B>,
+    where
+        F: FnMut(Self::Inner) -> Self::Outter<B>,
     {
         f(self?)
     }
@@ -30,9 +30,7 @@ impl<A: Clone> FlatMap for Vec<A> {
     where
         F: FnMut(Self::Inner) -> Self::Outter<B>,
     {
-        self.into_iter()
-            .flat_map(f)
-            .collect()
+        self.into_iter().flat_map(f).collect()
     }
 }
 
@@ -117,9 +115,7 @@ mod tests {
     #[test]
     fn vec() {
         let values = vec![1, 2, 3, 4];
-        let function = |x: u64| -> Vec<f32> {
-            vec![0.0, (x + 1) as f32, (x * x) as f32]
-        };
+        let function = |x: u64| -> Vec<f32> { vec![0.0, (x + 1) as f32, (x * x) as f32] };
         #[rustfmt::skip]
         let expected = vec![
           //0.0, x+1, x*x
