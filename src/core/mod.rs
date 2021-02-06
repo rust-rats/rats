@@ -5,6 +5,7 @@ pub mod flatmap;
 pub mod foldable;
 pub mod functor;
 pub mod monad;
+pub mod traverse;
 
 pub mod prelude {
     pub use super::applicative::*;
@@ -14,4 +15,5 @@ pub mod prelude {
     pub use super::foldable::*;
     pub use super::functor::*;
     pub use super::monad::*;
+    pub use super::traverse::*;
 }
