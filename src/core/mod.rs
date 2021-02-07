@@ -1,3 +1,4 @@
+pub mod alternative;
 pub mod applicative;
 pub mod apply;
 pub mod bifunctor;
@@ -9,6 +10,7 @@ pub mod monoid_k;
 pub mod semigroup_k;
 
 pub mod prelude {
+    pub use super::alternative::*;
     pub use super::applicative::*;
     pub use super::apply::*;
     pub use super::bifunctor::*;
