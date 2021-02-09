@@ -5,6 +5,7 @@ pub mod flatmap;
 pub mod foldable;
 pub mod functor;
 pub mod monad;
+pub mod monoid_k;
 pub mod semigroup_k;
 
 pub mod prelude {
@@ -15,5 +16,6 @@ pub mod prelude {
     pub use super::foldable::*;
     pub use super::functor::*;
     pub use super::monad::*;
+    pub use super::monoid_k::*;
     pub use super::semigroup_k::*;
 }
