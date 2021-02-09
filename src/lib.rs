@@ -1,7 +1,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_associated_types)]
+
 #![feature(external_doc)]
-#![warn(missing_docs)]
+#![doc(html_playground_url = "https://play.rust-lang.org/")]
 
 #![doc(include = "../README.md")]
 
