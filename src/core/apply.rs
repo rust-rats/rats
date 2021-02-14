@@ -1,5 +1,4 @@
 use super::functor::Functor;
-use crate::kernel::prelude::Id;
 
 pub trait Apply: Functor {
     fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
@@ -39,15 +38,6 @@ impl<A: Clone> Apply for Vec<A> {
                 applied_values
             })
             .collect()
-    }
-}
-
-impl<A> Apply for Id<A> {
-    fn apply<B, F>(self, f: Self::Outter<F>) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B,
-    {
-        self.fmap(f.into_value())
     }
 }
 
@@ -121,15 +111,6 @@ mod tests {
         let function = Ok(|x: u64| -> f32 { (x * x) as f32 });
         let function = to_err(function, ());
         assert_eq!(result.apply(function), Err(()));
-    }
-
-    #[test]
-    fn id() {
-        use crate::kernel::prelude::Id;
-
-        let id = Id(3);
-        let function = Id(|x: u64| -> f32 { (x * x) as f32 });
-        assert_eq!(id.apply(function), Id(9.0));
     }
 
     #[test]
