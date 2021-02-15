@@ -1,5 +1,4 @@
 use super::apply::Apply;
-use crate::kernel::prelude::Id;
 
 pub trait FlatMap: Apply {
     fn flat_map<B, F>(self, f: F) -> Self::Outter<B>
@@ -31,15 +30,6 @@ impl<A: Clone> FlatMap for Vec<A> {
         F: FnMut(Self::Inner) -> Self::Outter<B>,
     {
         self.into_iter().flat_map(f).collect()
-    }
-}
-
-impl<A> FlatMap for Id<A> {
-    fn flat_map<B, F>(self, mut f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> Self::Outter<B>,
-    {
-        f(self.into_value())
     }
 }
 
@@ -101,15 +91,6 @@ mod tests {
         let result = Err(());
         let function = |_x: u64| -> Result<f32, ()> { Err(()) };
         assert_eq!(result.flat_map(function), Err(()));
-    }
-
-    #[test]
-    fn id() {
-        use crate::kernel::prelude::Id;
-
-        let id = Id(3);
-        let function = |x: u64| -> Id<f32> { Id((x * x) as f32) };
-        assert_eq!(id.flat_map(function), Id(9.0));
     }
 
     #[test]

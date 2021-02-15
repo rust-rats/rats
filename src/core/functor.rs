@@ -1,5 +1,3 @@
-use crate::kernel::prelude::Id;
-
 pub trait Functor {
     type Inner;
     type Outter<B>: Functor;
@@ -48,19 +46,6 @@ impl<A> Functor for Vec<A> {
         F: FnMut(Self::Inner) -> B,
     {
         self.into_iter().map(f).collect()
-    }
-}
-
-impl<A> Functor for Id<A> {
-    type Inner = A;
-
-    type Outter<B> = Id<B>;
-
-    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B,
-    {
-        Id(f(self.into_value()))
     }
 }
 
@@ -114,13 +99,9 @@ mod tests {
 
 #[cfg(test)]
 mod laws {
-    use crate::kernel::prelude::Id;
-
     type OptionUsize = Option<usize>;
-    type IdUsize = Id<usize>;
     type ResultUsizeUsize = Result<usize, usize>;
     type VecUsize = Vec<usize>;
-    type IdUnit = Id<()>;
 
     macro_rules! preserve_identity {
         ($($t:ty),*) => {$(
@@ -144,83 +125,14 @@ mod laws {
         };
     }
 
-    macro_rules! composition_identity_id {
-        ($($t:ty),*) => {$(
-            paste::paste! {
-                composition_identity_id!([<composition_identity_ $t>]: $t);
-            }
-        )*};
-        ($name:ident: f64) => {
-            #[allow(non_snake_case, unused_imports)]
-            #[quickcheck]
-            fn $name(n1: Id<f64>) -> bool {
-                use crate::core::prelude::*;
-                use float_cmp::{approx_eq, F64Margin};
-                use std::convert::identity;
-                let f1 = |a: f64| (a / 5.) * 2f64;
-                let f2 = |a: f64| (a / 5.) * 3f64;
-                let n1_copy = n1.clone();
-
-                let left = n1.fmap(f1).fmap(f2).into_value();
-                let right = n1_copy.fmap(|a| f2(f1(a))).into_value();
-
-                if left.is_nan() && right.is_nan() {
-                    true
-                } else {
-                    approx_eq!(f64, left, right, F64Margin::default())
-                }
-
-            }
-        };
-        ($name:ident: f32) => {
-            #[allow(non_snake_case, unused_imports)]
-            #[quickcheck]
-            fn $name(n1: Id<f32>) -> bool {
-                use crate::core::prelude::*;
-                use float_cmp::{approx_eq, F32Margin};
-                use std::convert::identity;
-                let f1 = |a: f32| (a / 5.) * 2f32;
-                let f2 = |a: f32| (a / 5.) * 3f32;
-                let n1_copy = n1.clone();
-
-                let left = n1.fmap(f1).fmap(f2).into_value();
-                let right = n1_copy.fmap(|a| f2(f1(a))).into_value();
-
-                if left.is_nan() && right.is_nan() {
-                    true
-                } else {
-                    approx_eq!(f32, left, right, F32Margin::default())
-                }
-            }
-        };
-        ($name:ident: $t:ty) => {
-            #[allow(non_snake_case, unused_imports)]
-            #[quickcheck]
-            fn $name(n1: Id<$t>) -> bool {
-                use crate::core::prelude::*;
-                use std::convert::identity;
-                let f1 = |a: $t| (a / 5) * 2;
-                let f2 = |a: $t| (a / 5) * 3;
-                let n1_copy = n1.clone();
-
-                let left = n1.fmap(f1).fmap(f2);
-                let right = n1_copy.fmap(|a| f2(f1(a)));
-
-                left == right
-            }
-        };
-    }
-
     mod preserve_identity {
         use super::*;
 
-        preserve_identity!(OptionUsize, IdUsize, ResultUsizeUsize, VecUsize, IdUnit);
+        preserve_identity!(OptionUsize, ResultUsizeUsize, VecUsize);
     }
 
     mod composition_identity {
         use super::*;
-
-        composition_identity_id!(i32, i64, usize);
 
         #[quickcheck]
         fn composition_identity_vec_usize(vec: Vec<usize>) {
