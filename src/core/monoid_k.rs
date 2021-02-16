@@ -1,4 +1,4 @@
-use super::prelude::{SemigroupK, SemigroupKInstance, SemigroupKTy};
+use super::prelude::SemigroupKInstance;
 
 #[derive(Copy, Clone, Default)]
 pub struct MonoidK;
@@ -14,7 +14,7 @@ pub trait MonoidKTy {
 }
 
 pub trait MonoidKInstance<T> {
-    type Kind: MonoidKTy + SemigroupKTy;
+    type Kind: MonoidKTy;
 
     fn empty() -> <Self::Kind as MonoidKTy>::Cons<T>;
 }

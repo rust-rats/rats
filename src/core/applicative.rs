@@ -1,7 +1,4 @@
-use super::{
-    apply::Apply,
-    prelude::{ApplyInstance, ApplyTy, FunctorInstance, FunctorTy},
-};
+use super::prelude::ApplyInstance;
 
 #[derive(Copy, Clone)]
 pub struct Applicative;
@@ -14,13 +11,11 @@ impl Applicative {
 }
 
 pub trait ApplicativeTy {
-    type Cons<T>: ApplicativeInstance<Kind = Self>
-        + ApplyInstance<T, Kind = Self>
-        + FunctorInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<Kind = Self> + ApplyInstance<T, Kind = Self>;
 }
 
 pub trait ApplicativeInstance {
-    type Kind: ApplicativeTy + FunctorTy + ApplyTy;
+    type Kind: ApplicativeTy;
 
     fn pure<A>(value: A) -> <Self::Kind as ApplicativeTy>::Cons<A>;
 }

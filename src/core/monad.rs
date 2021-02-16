@@ -1,22 +1,11 @@
-use super::{
-    applicative::Applicative,
-    flatmap::{FlatMapInstance, FlatMapTy},
-    prelude::{ApplicativeTy, ApplyInstance, ApplyTy, FunctorTy},
-};
-use super::{
-    flatmap::FlatMap,
-    prelude::{ApplicativeInstance, FunctorInstance},
-};
+use super::flatmap::FlatMapInstance;
 
 pub trait MonadTy {
-    type Cons<T>: ApplicativeInstance<Kind = Self>
-        + FlatMapInstance<T, Kind = Self>
-        + ApplyInstance<T, Kind = Self>
-        + FunctorInstance<T, Kind = Self>;
+    type Cons<T>: MonadInstance<Kind = Self> + FlatMapInstance<T, Kind = Self>;
 }
 
 pub trait MonadInstance {
-    type Kind: MonadTy + ApplicativeTy + FlatMapTy + ApplyTy + FunctorTy;
+    type Kind: MonadTy;
 }
 
 pub mod std_instances {
@@ -44,7 +33,7 @@ pub mod std_instances {
         type Cons<T> = Vec<T>;
     }
 
-    impl<A: Clone> MonadInstance for Vec<A> {
+    impl<A> MonadInstance for Vec<A> {
         type Kind = VecKind;
     }
 }

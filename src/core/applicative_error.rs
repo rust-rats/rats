@@ -1,13 +1,7 @@
-use super::{
-    applicative::ApplicativeInstance,
-    prelude::{ApplyInstance, FunctorInstance},
-};
+use super::applicative::ApplicativeInstance;
 
 pub trait ApplicativeErrorTy {
-    type Cons<T>: ApplicativeErrorInstance<T, Kind = Self>
-        + ApplicativeInstance<Kind = Self>
-        + ApplyInstance<T, Kind = Self>
-        + FunctorInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeErrorInstance<T, Kind = Self> + ApplicativeInstance<Kind = Self>;
 }
 
 pub trait ApplicativeErrorInstance<T> {

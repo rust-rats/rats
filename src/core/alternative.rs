@@ -1,17 +1,13 @@
-use super::prelude::{
-    ApplicativeInstance, ApplicativeTy, MonoidKInstance, MonoidKTy, SemigroupKInstance,
-    SemigroupKTy,
-};
+use super::prelude::{ApplicativeInstance, MonoidKInstance};
 
 pub trait AlternativeTy {
     type Cons<T>: AlternativeInstance<T, Kind = Self>
-        + SemigroupKInstance<T, Kind = Self>
         + MonoidKInstance<T, Kind = Self>
         + ApplicativeInstance<Kind = Self>;
 }
 
 pub trait AlternativeInstance<T> {
-    type Kind: AlternativeTy + SemigroupKTy + MonoidKTy + ApplicativeTy;
+    type Kind: AlternativeTy;
 }
 
 pub mod std_instances {

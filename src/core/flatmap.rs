@@ -1,6 +1,4 @@
-use super::prelude::{
-    ApplicativeInstance, ApplicativeTy, ApplyInstance, ApplyTy, FunctorInstance, FunctorTy,
-};
+use super::prelude::ApplicativeInstance;
 
 #[derive(Copy, Clone, Default)]
 pub struct FlatMap;
@@ -17,14 +15,11 @@ impl FlatMap {
 }
 
 pub trait FlatMapTy {
-    type Cons<T>: ApplicativeInstance<Kind = Self>
-        + ApplyInstance<T, Kind = Self>
-        + FunctorInstance<T, Kind = Self>
-        + FlatMapInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<Kind = Self> + FlatMapInstance<T, Kind = Self>;
 }
 
 pub trait FlatMapInstance<T> {
-    type Kind: FlatMapTy + ApplicativeTy + ApplyTy + FunctorTy;
+    type Kind: FlatMapTy;
 
     fn flat_map<B>(
         self,

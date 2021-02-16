@@ -1,4 +1,4 @@
-use super::prelude::{FunctorInstance, FunctorTy};
+use super::prelude::FunctorInstance;
 
 #[derive(Copy, Clone)]
 pub struct Apply;
@@ -24,7 +24,7 @@ pub trait ApplyTy {
 }
 
 pub trait ApplyInstance<T> {
-    type Kind: ApplyTy + FunctorTy;
+    type Kind: ApplyTy;
 
     fn apply<B, F>(self, f: <Self::Kind as ApplyTy>::Cons<F>) -> <Self::Kind as ApplyTy>::Cons<B>
     where
@@ -32,10 +32,7 @@ pub trait ApplyInstance<T> {
 }
 
 pub mod std_instances {
-    use crate::{
-        core::prelude::{OptionKind, ResultKindOk, VecKind},
-        kernel::prelude::Semigroup,
-    };
+    use crate::core::prelude::{OptionKind, ResultKindOk, VecKind};
 
     use super::*;
 
