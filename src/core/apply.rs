@@ -1,4 +1,4 @@
-use super::prelude::{FunctorInstance, FunctorK};
+use super::prelude::{FunctorInstance, FunctorTy};
 
 #[derive(Copy, Clone)]
 pub struct Apply;
@@ -8,10 +8,10 @@ impl Apply {
     pub fn ap<Kind, F, A, B, K1>(
         _: Kind,
         fa: K1,
-        ff: <<K1 as ApplyInstance<A>>::Kind as ApplyK>::Cons<F>,
+        ff: <<K1 as ApplyInstance<A>>::Kind as ApplyTy>::Cons<F>,
     ) -> Kind::Cons<B>
     where
-        Kind: ApplyK,
+        Kind: ApplyTy,
         F: Fn(&A) -> B,
         K1: ApplyInstance<A, Kind = Kind> + FunctorInstance<A, Kind = Kind>,
     {
@@ -19,27 +19,27 @@ impl Apply {
     }
 }
 
-pub trait ApplyK {
+pub trait ApplyTy {
     type Cons<T>: ApplyInstance<T, Kind = Self> + FunctorInstance<T, Kind = Self>;
 }
 
 pub trait ApplyInstance<T> {
-    type Kind: ApplyK + FunctorK;
+    type Kind: ApplyTy + FunctorTy;
 
-    fn apply<B, F>(self, f: <Self::Kind as ApplyK>::Cons<F>) -> <Self::Kind as ApplyK>::Cons<B>
+    fn apply<B, F>(self, f: <Self::Kind as ApplyTy>::Cons<F>) -> <Self::Kind as ApplyTy>::Cons<B>
     where
         F: Fn(&T) -> B;
 }
 
 pub mod std_instances {
     use crate::{
-        core::prelude::{OptionKind, ResultKind, VecKind},
+        core::prelude::{OptionKind, ResultKindOk, VecKind},
         kernel::prelude::Semigroup,
     };
 
     use super::*;
 
-    impl ApplyK for OptionKind {
+    impl ApplyTy for OptionKind {
         type Cons<T> = Option<T>;
     }
 
@@ -57,7 +57,7 @@ pub mod std_instances {
         }
     }
 
-    impl ApplyK for VecKind {
+    impl ApplyTy for VecKind {
         type Cons<T> = Vec<T>;
     }
 
@@ -80,12 +80,12 @@ pub mod std_instances {
         }
     }
 
-    impl<E> ApplyK for ResultKind<E> {
+    impl<E> ApplyTy for ResultKindOk<E> {
         type Cons<T> = Result<T, E>;
     }
 
     impl<A, E> ApplyInstance<A> for Result<A, E> {
-        type Kind = ResultKind<E>;
+        type Kind = ResultKindOk<E>;
 
         fn apply<B, F>(self, f: Result<F, E>) -> Result<B, E>
         where

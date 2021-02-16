@@ -1,6 +1,6 @@
 use super::{
     apply::Apply,
-    prelude::{ApplyInstance, ApplyK, FunctorInstance, FunctorK},
+    prelude::{ApplyInstance, ApplyTy, FunctorInstance, FunctorTy},
 };
 
 #[derive(Copy, Clone)]
@@ -8,29 +8,29 @@ pub struct Applicative;
 
 impl Applicative {
     #[inline]
-    pub fn pure<Kind: ApplicativeK, A>(_: Kind, value: A) -> Kind::Cons<A> {
+    pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
         Kind::Cons::<A>::pure(value)
     }
 }
 
-pub trait ApplicativeK {
+pub trait ApplicativeTy {
     type Cons<T>: ApplicativeInstance<Kind = Self>
         + ApplyInstance<T, Kind = Self>
         + FunctorInstance<T, Kind = Self>;
 }
 
 pub trait ApplicativeInstance {
-    type Kind: ApplicativeK + FunctorK + ApplyK;
+    type Kind: ApplicativeTy + FunctorTy + ApplyTy;
 
-    fn pure<A>(value: A) -> <Self::Kind as ApplicativeK>::Cons<A>;
+    fn pure<A>(value: A) -> <Self::Kind as ApplicativeTy>::Cons<A>;
 }
 
 pub mod std_instances {
-    use crate::core::prelude::{OptionKind, ResultKind, VecKind};
+    use crate::core::prelude::{OptionKind, ResultKindOk, VecKind};
 
     use super::*;
 
-    impl ApplicativeK for OptionKind {
+    impl ApplicativeTy for OptionKind {
         type Cons<T> = Option<T>;
     }
 
@@ -42,18 +42,18 @@ pub mod std_instances {
         }
     }
 
-    impl<E> ApplicativeK for ResultKind<E> {
+    impl<E> ApplicativeTy for ResultKindOk<E> {
         type Cons<T> = Result<T, E>;
     }
     impl<T, E> ApplicativeInstance for Result<T, E> {
-        type Kind = ResultKind<E>;
+        type Kind = ResultKindOk<E>;
 
         fn pure<A>(value: A) -> Result<A, E> {
             Ok(value)
         }
     }
 
-    impl ApplicativeK for VecKind {
+    impl ApplicativeTy for VecKind {
         type Cons<T> = Vec<T>;
     }
 
@@ -65,52 +65,6 @@ pub mod std_instances {
         }
     }
 }
-
-// pub trait ApplicativeError: Applicative {
-// type ErrorT;
-
-// fn handle_error_with<F>(self, f: F) -> Self::Outter<Self::Inner>
-// where
-// F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>;
-
-// fn raise_error(error: Self::ErrorT) -> Self::Outter<Self::Inner>;
-// }
-
-// impl<A, E> ApplicativeError for Result<A, E> {
-// type ErrorT = E;
-
-// fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
-// where
-// F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
-// {
-// match self {
-// Err(e) => f(e),
-// _ => self,
-// }
-// }
-
-// fn raise_error(error: Self::ErrorT) -> Self::Outter<Self::Inner> {
-// Err(error)
-// }
-// }
-
-// impl<A> ApplicativeError for Option<A> {
-// type ErrorT = ();
-
-// fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
-// where
-// F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
-// {
-// match self {
-// None => f(()),
-// _ => self,
-// }
-// }
-
-// fn raise_error(_error: Self::ErrorT) -> Self::Outter<Self::Inner> {
-// None
-// }
-// }
 
 // #[cfg(test)]
 // mod tests {

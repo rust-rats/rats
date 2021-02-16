@@ -3,7 +3,7 @@ pub struct Functor;
 
 impl Functor {
     #[inline]
-    pub fn fmap<Kind: FunctorK, A, B, F>(
+    pub fn fmap<Kind: FunctorTy, A, B>(
         _: Kind,
         fa: impl FunctorInstance<A, Kind = Kind>,
         f: impl Fn(&A) -> B,
@@ -11,7 +11,7 @@ impl Functor {
         fa.fmap(f)
     }
 
-    pub fn lift<Kind: FunctorK, A: FunctorInstance<T, Kind = Kind>, T, B>(
+    pub fn lift<Kind: FunctorTy, A: FunctorInstance<T, Kind = Kind>, T, B>(
         _: Kind,
         fun: impl Fn(&T) -> B,
     ) -> impl FnOnce(A) -> Kind::Cons<B> {
@@ -19,21 +19,21 @@ impl Functor {
     }
 }
 
-pub trait FunctorK {
+pub trait FunctorTy {
     type Cons<T>: FunctorInstance<T, Kind = Self>;
 }
 
 pub trait FunctorInstance<T> {
-    type Kind: FunctorK;
+    type Kind: FunctorTy;
 
-    fn fmap<B>(self, f: impl Fn(&T) -> B) -> <Self::Kind as FunctorK>::Cons<B>;
+    fn fmap<B>(self, f: impl Fn(&T) -> B) -> <Self::Kind as FunctorTy>::Cons<B>;
 }
 
 pub mod std_instances {
     use super::*;
-    use crate::core::prelude::{OptionKind, ResultKind, VecKind};
+    use crate::core::prelude::{OptionKind, ResultKindOk, VecKind};
 
-    impl FunctorK for OptionKind {
+    impl FunctorTy for OptionKind {
         type Cons<T> = Option<T>;
     }
 
@@ -48,7 +48,7 @@ pub mod std_instances {
         }
     }
 
-    impl FunctorK for VecKind {
+    impl FunctorTy for VecKind {
         type Cons<T> = Vec<T>;
     }
 
@@ -60,12 +60,12 @@ pub mod std_instances {
         }
     }
 
-    impl<E> FunctorK for ResultKind<E> {
+    impl<E> FunctorTy for ResultKindOk<E> {
         type Cons<T> = Result<T, E>;
     }
 
     impl<A, E> FunctorInstance<A> for Result<A, E> {
-        type Kind = ResultKind<E>;
+        type Kind = ResultKindOk<E>;
 
         fn fmap<B>(self, f: impl FnOnce(&A) -> B) -> Result<B, E> {
             match self {

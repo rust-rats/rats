@@ -1,64 +1,96 @@
 use crate::kernel::prelude::Monoid;
 
-pub trait Foldable {
-    type Inner;
-    type Outter<B>: Foldable;
+#[derive(Copy, Clone, Default)]
+pub struct Foldable;
 
-    fn fold_left<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B;
-    fn fold_right<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B;
-}
+impl Foldable {
+    #[inline]
+    pub fn fold_left<Kind: FoldableTy, A, B>(
+        _: Kind,
+        fa: impl FoldableInstance<A, Kind = Kind>,
+        start: B,
+        f: impl Fn(B, &A) -> B,
+    ) -> B {
+        fa.fold_left(start, f)
+    }
 
-pub trait MonoidFoldable<T: Monoid>: Foldable<Inner = T>
-where
-    Self: Sized,
-{
-    fn folding(self) -> Self::Inner {
-        self.fold_left(Self::Inner::empty(), |acc, x| x.combine(acc))
+    #[inline]
+    pub fn fold_right<Kind: FoldableTy, A, B>(
+        _: Kind,
+        fa: impl FoldableInstance<A, Kind = Kind>,
+        start: B,
+        f: impl Fn(&A, B) -> B,
+    ) -> B {
+        fa.fold_right(start, f)
+    }
+
+    #[inline]
+    pub fn fold<Kind: FoldableTy, A: Monoid + Copy>(
+        // TODO remove the need for this Copy
+        _: Kind,
+        fa: impl FoldableInstance<A, Kind = Kind>,
+    ) -> A {
+        fa.fold_left(A::empty(), |acc, x| x.combine(acc))
     }
 }
 
-impl<E: Foldable<Inner = T>, T: Monoid> MonoidFoldable<T> for E {}
-
-impl<T> Foldable for Vec<T> {
-    type Inner = T;
-
-    type Outter<B> = Vec<B>;
-
-    fn fold_left<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B {
-        self.into_iter().fold(start, f)
-    }
-
-    fn fold_right<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B {
-        //TODO should be lazy?
-        self.into_iter().rev().fold(start, f)
-    }
+pub trait FoldableTy {
+    type Cons<T>: FoldableInstance<T, Kind = Self>;
 }
 
-impl<T> Foldable for Option<T> {
-    type Inner = T;
+pub trait FoldableInstance<T> {
+    type Kind: FoldableTy;
 
-    type Outter<B> = Option<B>;
-
-    fn fold_left<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B {
-        self.into_iter().fold(start, f)
-    }
-
-    fn fold_right<B>(self, start: B, f: impl FnMut(B, Self::Inner) -> B) -> B {
-        self.into_iter().rev().fold(start, f)
-    }
+    fn fold_left<B>(self, start: B, f: impl Fn(B, &T) -> B) -> B;
+    fn fold_right<B>(self, start: B, f: impl Fn(&T, B) -> B) -> B;
 }
 
-#[cfg(test)]
-mod tests {
+pub mod std_instances {
+    use crate::core::prelude::VecKind;
+
     use super::*;
 
-    #[quickcheck]
-    fn folding_consistent_with_sum(x: Vec<i32>) {
-        let cloned = x.clone();
+    impl FoldableTy for VecKind {
+        type Cons<T> = Vec<T>;
+    }
 
-        assert_eq!(
-            x.folding(),
-            cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
-        )
+    impl<T> FoldableInstance<T> for Vec<T> {
+        type Kind = VecKind;
+
+        fn fold_left<B>(self, start: B, f: impl FnMut(B, &T) -> B) -> B {
+            self.iter().fold(start, f)
+        }
+
+        fn fold_right<B>(self, start: B, mut f: impl FnMut(&T, B) -> B) -> B {
+            //TODO should be lazy?
+            self.iter().rev().fold(start, |a, b| f(b, a))
+        }
+    }
+
+    impl<T> FoldableInstance<T> for Option<T> {
+        type Kind = VecKind;
+
+        fn fold_left<B>(self, start: B, f: impl FnMut(B, &T) -> B) -> B {
+            self.iter().fold(start, f)
+        }
+
+        fn fold_right<B>(self, start: B, mut f: impl FnMut(&T, B) -> B) -> B {
+            self.iter().rev().fold(start, |a, b| f(b, a))
+        }
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+// use super::*;
+
+// #[quickcheck]
+// fn folding_consistent_with_sum(x: Vec<i32>) {
+// let cloned = x.clone();
+
+// assert_eq!(
+// x.folding(),
+// cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
+// )
+// }
+// }
