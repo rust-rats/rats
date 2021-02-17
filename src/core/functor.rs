@@ -90,99 +90,87 @@ pub mod std_instances {
 // }
 //
 
-// #[cfg(test)]
-// mod tests {
-// use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::std_kinds::*;
 
-// #[test]
-// fn do_you_even_lift() {
-// let times_two = |x: i32| x * 2;
-// let times_two_ref = |x: &i32| x * 2;
+    #[test]
+    fn do_you_even_lift() {
+        let times_two = |x: &i32| x * 2;
 
-// fn plus_one(x: i32) -> i32 {
-// x + 1
-// }
+        let lifted_times_two = Functor::lift(OptionKind, times_two);
 
-// let mut lifted_times_two = lift(times_two);
-// let mut lifted_plus_one = lift(plus_one);
+        let value = Some(2i32);
+        assert_eq!(lifted_times_two(value), Some(4));
+    }
+}
 
-// let value = Some(2i32);
-// assert_eq!(lifted_times_two(value), Some(4));
-// {
-// // needs new scope to make sure the lifted function
-// // does not outlive the parameter
-// let mut lifted_times_two_ref = lift(times_two_ref);
-// assert_eq!(lifted_times_two_ref(value.as_ref()), Some(4));
-// }
-// assert_eq!(lifted_plus_one(value), Some(3));
-// }
-// }
+#[cfg(test)]
+mod laws {
+    type OptionUsize = Option<usize>;
+    type ResultUsizeUsize = Result<usize, usize>;
+    type VecUsize = Vec<usize>;
 
-// #[cfg(test)]
-// mod laws {
-// type OptionUsize = Option<usize>;
-// type ResultUsizeUsize = Result<usize, usize>;
-// type VecUsize = Vec<usize>;
+    macro_rules! preserve_identity {
+        ($($t:ty),*) => {$(
+            paste::paste! {
+                preserve_identity!([<preserve_identity_ $t>]: $t);
+            }
+        )*};
+        ($name:ident: $t:ty) => {
+            #[allow(non_snake_case, unused_imports)]
+            #[quickcheck]
+            fn $name(n1: $t) -> bool {
+                use crate::core::prelude::*;
+                let n1_copy = n1.clone();
 
-// macro_rules! preserve_identity {
-// ($($t:ty),*) => {$(
-// paste::paste! {
-// preserve_identity!([<preserve_identity_ $t>]: $t);
-// }
-// )*};
-// ($name:ident: $t:ty) => {
-// #[allow(non_snake_case, unused_imports)]
-// #[quickcheck]
-// fn $name(n1: $t) -> bool {
-// use crate::core::prelude::*;
-// use std::convert::identity;
-// let n1_copy = n1.clone();
+                // we have to use clone as identity
+                // because the function receives a ref
+                let left = n1.fmap(Clone::clone);
+                let right = n1_copy;
 
-// let left = n1.fmap(identity);
-// let right = n1_copy;
+                left == right
+            }
+        };
+    }
 
-// left == right
-// }
-// };
-// }
+    mod preserve_identity {
+        use super::*;
 
-// mod preserve_identity {
-// use super::*;
+        preserve_identity!(OptionUsize, ResultUsizeUsize, VecUsize);
+    }
 
-// preserve_identity!(OptionUsize, ResultUsizeUsize, VecUsize);
-// }
+    mod composition_identity {
 
-// mod composition_identity {
-// use super::*;
+        #[quickcheck]
+        fn composition_identity_vec_usize(vec: Vec<usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
+            let vec_copy = vec.clone();
 
-// #[quickcheck]
-// fn composition_identity_vec_usize(vec: Vec<usize>) {
-// use crate::core::prelude::*;
-// let f1 = |a: usize| (a / 5) * 2;
-// let f2 = |a: usize| (a / 5) * 3;
-// let vec_copy = vec.clone();
+            assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(&f1(a))))
+        }
 
-// assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(f1(a))))
-// }
+        #[quickcheck]
+        fn composition_identity_option_usize(opt: Option<usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
+            let opt_copy = opt;
 
-// #[quickcheck]
-// fn composition_identity_option_usize(opt: Option<usize>) {
-// use crate::core::prelude::*;
-// let f1 = |a: usize| (a / 5) * 2;
-// let f2 = |a: usize| (a / 5) * 3;
-// let opt_copy = opt;
+            assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(&f1(a))))
+        }
 
-// assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(f1(a))))
-// }
+        #[quickcheck]
+        fn composition_identity_result_usize_usize(res: Result<usize, usize>) {
+            use crate::core::prelude::*;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
+            let res_copy = res;
 
-// #[quickcheck]
-// fn composition_identity_result_usize_usize(res: Result<usize, usize>) {
-// use crate::core::prelude::*;
-// let f1 = |a: usize| (a / 5) * 2;
-// let f2 = |a: usize| (a / 5) * 3;
-// let res_copy = res;
-
-// assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(f1(a))))
-// }
-// }
-// }
+            assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(&f1(a))))
+        }
+    }
+}

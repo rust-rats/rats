@@ -67,28 +67,28 @@ pub mod std_instances {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-// use super::SemigroupK;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-// #[test]
-// fn semigroup_k_option_is_first_success() {
-// assert_eq!(Some(1).combine_k(None), Some(1));
-// assert_eq!(Some(1).combine_k(Some(2)), Some(1));
-// assert_eq!(Option::<i32>::None.combine_k(Some(2)), Some(2));
-// assert_eq!(Option::<i32>::None.combine_k(Option::<i32>::None), None);
-// }
+    #[test]
+    fn semigroup_k_option_is_first_success() {
+        assert_eq!(Some(1).combine_k(None), Some(1));
+        assert_eq!(Some(1).combine_k(Some(2)), Some(1));
+        assert_eq!(Option::<i32>::None.combine_k(Some(2)), Some(2));
+        assert_eq!(Option::<i32>::None.combine_k(Option::<i32>::None), None);
+    }
 
-// #[test]
-// fn semigroup_k_result_is_first_success() {
-// assert_eq!(Ok(1).combine_k(Err(())), Ok(1));
-// assert_eq!(Ok(1).combine_k(Result::<i32, ()>::Ok(2)), Ok(1));
-// assert_eq!(Err(()).combine_k(Ok(2)), Ok(2));
-// assert_eq!(Result::<i32, ()>::Err(()).combine_k(Err(())), Err(()));
-// }
+    #[test]
+    fn semigroup_k_result_is_first_success() {
+        assert_eq!(Ok(1).combine_k(Err(())), Ok(1));
+        assert_eq!(Ok(1).combine_k(Result::<i32, ()>::Ok(2)), Ok(1));
+        assert_eq!(Err(()).combine_k(Ok(2)), Ok(2));
+        assert_eq!(Result::<i32, ()>::Err(()).combine_k(Err(())), Err(()));
+    }
 
-// #[test]
-// fn semigroup_k_vec_is_append() {
-// assert_eq!(vec![1, 2].combine_k(vec![3, 4]), vec![1, 2, 3, 4]);
-// }
-// }
+    #[test]
+    fn semigroup_k_vec_is_append() {
+        assert_eq!(vec![1, 2].combine_k(vec![3, 4]), vec![1, 2, 3, 4]);
+    }
+}

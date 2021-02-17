@@ -61,3 +61,34 @@ pub mod std_instances {
         }
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+
+    #[test]
+    fn handle_error_with_for_result() {
+        let value = Err(());
+        let handler = |_err: &_| Ok(3);
+        assert_eq!(value.handle_error_with(handler), Ok(3));
+    }
+
+    #[test]
+    fn raise_error_for_result() {
+        let err = Result::<u64, String>::raise_error("ERROR!".to_string());
+        assert_eq!(err, Err("ERROR!".to_string()));
+    }
+
+    #[test]
+    fn handle_error_with_for_option() {
+        let value = None;
+        let handler = |_: &_| Some(3);
+        assert_eq!(value.handle_error_with(handler), Some(3));
+    }
+
+    #[test]
+    fn raise_error_for_option() {
+        let err = Option::<u64>::raise_error(());
+        assert_eq!(err, None);
+    }
+}

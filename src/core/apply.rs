@@ -97,95 +97,95 @@ pub mod std_instances {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-// use super::Apply;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-// fn to_none<T>(_: Option<T>) -> Option<T> {
-// None
-// }
+    fn to_none<T>(_: Option<T>) -> Option<T> {
+        None
+    }
 
-// #[test]
-// fn option_some_some() {
-// let option = Some(3);
-// let function = Some(|x: u64| -> f32 { (x * x) as f32 });
-// assert_eq!(option.apply(function), Some(9.0));
-// }
+    #[test]
+    fn option_some_some() {
+        let option = Some(3);
+        let function = Some(|x: &u64| -> f32 { (x * x) as f32 });
+        assert_eq!(option.apply(function), Some(9.0));
+    }
 
-// #[test]
-// fn option_some_none() {
-// let option = Some(3);
-// let function = Some(|x: u64| -> f32 { (x * x) as f32 });
-// let function = to_none(function);
-// assert_eq!(option.apply(function), None);
-// }
+    #[test]
+    fn option_some_none() {
+        let option = Some(3);
+        let function = Some(|x: &u64| -> f32 { (x * x) as f32 });
+        let function = to_none(function);
+        assert_eq!(option.apply(function), None);
+    }
 
-// #[test]
-// fn option_none_some() {
-// let option = None;
-// let function = Some(|x: u64| -> f32 { (x * x) as f32 });
-// assert_eq!(option.apply(function), None);
-// }
+    #[test]
+    fn option_none_some() {
+        let option = None;
+        let function = Some(|x: &u64| -> f32 { (x * x) as f32 });
+        assert_eq!(option.apply(function), None);
+    }
 
-// #[test]
-// fn option_none_none() {
-// let option = None;
-// let function = Some(|x: u64| -> f32 { (x * x) as f32 });
-// let function = to_none(function);
-// assert_eq!(option.apply(function), None);
-// }
+    #[test]
+    fn option_none_none() {
+        let option = None;
+        let function = Some(|x: &u64| -> f32 { (x * x) as f32 });
+        let function = to_none(function);
+        assert_eq!(option.apply(function), None);
+    }
 
-// fn to_err<T, E>(_: Result<T, E>, e: E) -> Result<T, E> {
-// Err(e)
-// }
+    fn to_err<T, E>(_: Result<T, E>, e: E) -> Result<T, E> {
+        Err(e)
+    }
 
-// #[test]
-// fn result_ok_ok() {
-// let result: Result<u64, ()> = Ok(3);
-// let function = Ok(|x: u64| -> f32 { (x * x) as f32 });
-// assert_eq!(result.apply(function), Ok(9.0));
-// }
+    #[test]
+    fn result_ok_ok() {
+        let result: Result<u64, ()> = Ok(3);
+        let function = Ok(|x: &u64| -> f32 { (x * x) as f32 });
+        assert_eq!(result.apply(function), Ok(9.0));
+    }
 
-// #[test]
-// fn result_ok_err() {
-// let result: Result<u64, ()> = Ok(3);
-// let function = Ok(|x: u64| -> f32 { (x * x) as f32 });
-// let function = to_err(function, ());
-// assert_eq!(result.apply(function), Err(()));
-// }
+    #[test]
+    fn result_ok_err() {
+        let result: Result<u64, ()> = Ok(3);
+        let function = Ok(|x: &u64| -> f32 { (x * x) as f32 });
+        let function = to_err(function, ());
+        assert_eq!(result.apply(function), Err(()));
+    }
 
-// #[test]
-// fn result_err_ok() {
-// let result = Err(());
-// let function = Ok(|x: u64| -> f32 { (x * x) as f32 });
-// assert_eq!(result.apply(function), Err(()));
-// }
+    #[test]
+    fn result_err_ok() {
+        let result = Err(());
+        let function = Ok(|x: &u64| -> f32 { (x * x) as f32 });
+        assert_eq!(result.apply(function), Err(()));
+    }
 
-// #[test]
-// fn result_err_err() {
-// let result = Err(());
-// let function = Ok(|x: u64| -> f32 { (x * x) as f32 });
-// let function = to_err(function, ());
-// assert_eq!(result.apply(function), Err(()));
-// }
+    #[test]
+    fn result_err_err() {
+        let result = Err(());
+        let function = Ok(|x: &u64| -> f32 { (x * x) as f32 });
+        let function = to_err(function, ());
+        assert_eq!(result.apply(function), Err(()));
+    }
 
-// #[test]
-// fn vec() {
-// let values = vec![1, 2, 3, 4];
-// let functions = vec![
-// Box::new(|_x: u64| -> f32 { 0.0 }) as Box<dyn Fn(u64) -> f32>,
-// Box::new(|x: u64| -> f32 { (x + 1) as f32 }) as Box<dyn Fn(u64) -> f32>,
-// Box::new(|x: u64| -> f32 { (x * x) as f32 }) as Box<dyn Fn(u64) -> f32>,
-// ];
-// #[rustfmt::skip]
-// let expected = vec![
-// //0.0, x+1, x*x
-// 0.0, 2.0, 1.0,
-// 0.0, 3.0, 4.0,
-// 0.0, 4.0, 9.0,
-// 0.0, 5.0, 16.0,
-// ];
-// let actual = values.apply(functions);
-// assert_eq!(actual, expected);
-// }
-// }
+    #[test]
+    fn vec() {
+        let values = vec![1, 2, 3, 4];
+        let functions: Vec<Box<dyn Fn(&u64) -> f32>> = vec![
+            Box::new(|_x: &u64| -> f32 { 0.0 as f32 }),
+            Box::new(|x: &u64| -> f32 { (x + 1) as f32 }),
+            Box::new(|x: &u64| -> f32 { (x * x) as f32 }),
+        ];
+        #[rustfmt::skip]
+        let expected = vec![
+            //0.0, x+1, x*x
+            0.0, 2.0, 1.0,
+            0.0, 3.0, 4.0,
+            0.0, 4.0, 9.0,
+            0.0, 5.0, 16.0,
+        ];
+        let actual = values.apply(functions);
+        assert_eq!(actual, expected);
+    }
+}

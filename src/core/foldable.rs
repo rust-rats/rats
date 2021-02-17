@@ -80,17 +80,18 @@ pub mod std_instances {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-// use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::std_kinds::*;
 
-// #[quickcheck]
-// fn folding_consistent_with_sum(x: Vec<i32>) {
-// let cloned = x.clone();
+    #[quickcheck]
+    fn folding_consistent_with_sum(x: Vec<i32>) {
+        let cloned = x.clone();
 
-// assert_eq!(
-// x.folding(),
-// cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
-// )
-// }
-// }
+        assert_eq!(
+            Foldable::fold(VecKind, x.clone()),
+            cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
+        )
+    }
+}
