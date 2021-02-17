@@ -182,12 +182,12 @@ impl<A> Applicative for Id<A> {
 ///
 /// A Type T that implements this trait must implement Applicative and satisfy the following:
 /// 1. ApplicativeError Raise and Handle: `handle_error_with(f)` composed with `raise_error`
-/// must be equivalent to applying `f`
+/// must be equivalent to applying `f`. Analogous for `handle`.
 /// ```rust
 /// # use rats::core::applicative::Applicative;
 /// # use rats::core::applicative::ApplicativeError;
 /// # type T<A, E> = Result<A, E>;
-/// # fn applicative_identity<A, E, F>(e: E, mut f: F)
+/// # fn applicative_error_raise_and_handle_error_with<A, E, F>(e: E, mut f: F)
 /// # where
 /// #     A : std::fmt::Debug + std::cmp::PartialEq,
 /// #     E : Copy + std::fmt::Debug + std::cmp::PartialEq,
@@ -196,16 +196,48 @@ impl<A> Applicative for Id<A> {
 /// assert_eq!(T::raise_error(e).handle_error_with(f), f(e));
 /// # }
 /// ```
+/// ```rust
+/// # use rats::core::applicative::Applicative;
+/// # use rats::core::applicative::ApplicativeError;
+/// # type T<A, E> = Result<A, E>;
+/// # fn applicative_error_raise_and_handle<A, E, F>(e: E, mut f: F)
+/// # where
+/// #     A : std::fmt::Debug + std::cmp::PartialEq,
+/// #     E : Copy + std::fmt::Debug + std::cmp::PartialEq,
+/// #     F : Copy + FnMut(E)->A,
+/// # {
+/// assert_eq!(T::raise_error(e).handle(f), T::pure(f(e)));
+/// # }
+/// ```
+/// 2. ApplicativeError Handle Pure: Calling pure does not lead to an error type,
+/// therefore, `handle_error_with` should have no effect. Analogous for `handle`.
+/// ```rust
+/// # use rats::core::applicative::Applicative;
+/// # use rats::core::applicative::ApplicativeError;
+/// # type T<A, E> = Result<A, E>;
+/// # fn applicative_error_pure_then_handle_error_with<A, E, F>(a: A, mut f: F)
+/// # where
+/// #     A : Copy + std::fmt::Debug + std::cmp::PartialEq,
+/// #     E : std::fmt::Debug + std::cmp::PartialEq,
+/// #     F : Copy + FnMut(E)->T<A, E>,
+/// # {
+/// assert_eq!(T::pure(a).handle_error_with(f), T::pure(a));
+/// # }
+/// ```
+/// ```rust
+/// # use rats::core::applicative::Applicative;
+/// # use rats::core::applicative::ApplicativeError;
+/// # type T<A, E> = Result<A, E>;
+/// # fn applicative_error_pure_then_handle<A, E, F>(a: A, mut f: F)
+/// # where
+/// #     A : Copy + std::fmt::Debug + std::cmp::PartialEq,
+/// #     E : std::fmt::Debug + std::cmp::PartialEq,
+/// #     F : Copy + FnMut(E)->A,
+/// # {
+/// assert_eq!(T::pure(a).handle(f), T::pure(a));
+/// # }
+/// ```
 /// TODO
-//
-//   def applicativeErrorHandle[A](e: E, f: E => A): IsEq[F[A]] =
-//     F.handleError(F.raiseError[A](e))(f) <-> F.pure(f(e))
-//
-//   def handleErrorWithPure[A](a: A, f: E => F[A]): IsEq[F[A]] =
-//     F.handleErrorWith(F.pure(a))(f) <-> F.pure(a)
-//
-//   def handleErrorPure[A](a: A, f: E => A): IsEq[F[A]] =
-//     F.handleError(F.pure(a))(f) <-> F.pure(a)
 //
 //   def raiseErrorAttempt(e: E): IsEq[F[Either[E, Unit]]] =
 //     F.attempt(F.raiseError[Unit](e)) <-> F.pure(Left(e))
@@ -265,6 +297,17 @@ pub trait ApplicativeError: Applicative {
     /// Otherwise, nothing happens. Example:
     /// ```rust
     /// # use rats::core::applicative::ApplicativeError;
+    /// let handler = |_| 99;
+    /// assert_eq!(Err("error").handle(handler), Ok(99));
+    /// assert_eq!(Ok(12).handle(handler), Ok(12));
+    /// ```
+    fn handle<F>(self, f: F) -> Self::Outter<Self::Inner>
+    where
+        F: FnMut(Self::ErrorT) -> Self::Inner;
+
+    /// Same as handle, but the function already returns a lifted value. Example:
+    /// ```rust
+    /// # use rats::core::applicative::ApplicativeError;
     /// let handler = |_| Ok(99);
     /// assert_eq!(Err("error").handle_error_with(handler), Ok(99));
     /// assert_eq!(Ok(12).handle_error_with(handler), Ok(12));
@@ -280,9 +323,19 @@ pub trait ApplicativeError: Applicative {
 impl<A, E> ApplicativeError for Result<A, E> {
     type ErrorT = E;
 
+    fn handle<F>(self, mut f: F) -> Self::Outter<Self::Inner>
+        where
+            F: FnMut(Self::ErrorT) -> Self::Inner,
+    {
+        match self {
+            Err(e) => Ok(f(e)),
+            _ => self,
+        }
+    }
+
     fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
-    where
-        F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
+        where
+            F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
     {
         match self {
             Err(e) => f(e),
@@ -298,9 +351,19 @@ impl<A, E> ApplicativeError for Result<A, E> {
 impl<A> ApplicativeError for Option<A> {
     type ErrorT = ();
 
+    fn handle<F>(self, mut f: F) -> Self::Outter<Self::Inner>
+        where
+            F: FnMut(Self::ErrorT) -> Self::Inner,
+    {
+        match self {
+            None => Some(f(())),
+            _ => self,
+        }
+    }
+
     fn handle_error_with<F>(self, mut f: F) -> Self::Outter<Self::Inner>
-    where
-        F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
+        where
+            F: FnMut(Self::ErrorT) -> Self::Outter<Self::Inner>,
     {
         match self {
             None => f(()),
