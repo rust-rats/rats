@@ -1,5 +1,4 @@
 use super::apply::Apply;
-use crate::kernel::helpers::Id;
 
 pub trait Applicative: Apply {
     fn pure(value: Self::Inner) -> Self::Outter<Self::Inner>;
@@ -20,12 +19,6 @@ impl<A, E> Applicative for Result<A, E> {
 impl<A: Clone> Applicative for Vec<A> {
     fn pure(value: Self::Inner) -> Self::Outter<Self::Inner> {
         vec![value]
-    }
-}
-
-impl<A> Applicative for Id<A> {
-    fn pure(value: Self::Inner) -> Self::Outter<Self::Inner> {
-        Id(value)
     }
 }
 
@@ -95,14 +88,6 @@ mod tests {
     fn vec() {
         let value = 3;
         assert_eq!(Vec::pure(value), vec![value]);
-    }
-
-    #[test]
-    fn id() {
-        use crate::kernel::prelude::Id;
-
-        let value = 3;
-        assert_eq!(Id::pure(value), Id(3));
     }
 
     #[test]
