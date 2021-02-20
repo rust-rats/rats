@@ -1,16 +1,12 @@
 use super::prelude::ApplicativeInstance;
 
-pub mod flatmap {
-    use super::*;
-
-    #[inline]
-    pub fn flat_map<Kind: FlatMapTy, A, B>(
-        _: Kind,
-        fa: impl FlatMapInstance<A, Kind = Kind>,
-        f: impl Fn(&A) -> Kind::Cons<B>,
-    ) -> Kind::Cons<B> {
-        fa.flat_map(f)
-    }
+#[inline]
+pub fn flat_map<Kind: FlatMapTy, A, B>(
+    _: Kind,
+    fa: impl FlatMapInstance<A, Kind = Kind>,
+    f: impl Fn(&A) -> Kind::Cons<B>,
+) -> Kind::Cons<B> {
+    fa.flat_map(f)
 }
 
 pub trait FlatMapTy {

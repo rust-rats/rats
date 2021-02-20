@@ -1,12 +1,8 @@
 use super::prelude::ApplyInstance;
 
-pub mod applicative {
-    use super::*;
-
-    #[inline]
-    pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
-        Kind::Cons::<A>::pure(value)
-    }
+#[inline]
+pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
+    Kind::Cons::<A>::pure(value)
 }
 
 pub trait ApplicativeTy {

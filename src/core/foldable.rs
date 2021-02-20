@@ -1,36 +1,32 @@
 use crate::kernel::prelude::Monoid;
 
-pub mod foldable {
-    use super::*;
+#[inline]
+pub fn fold_left<Kind: FoldableTy, A, B>(
+    _: Kind,
+    fa: impl FoldableInstance<A, Kind = Kind>,
+    start: B,
+    f: impl Fn(B, &A) -> B,
+) -> B {
+    fa.fold_left(start, f)
+}
 
-    #[inline]
-    pub fn fold_left<Kind: FoldableTy, A, B>(
-        _: Kind,
-        fa: impl FoldableInstance<A, Kind = Kind>,
-        start: B,
-        f: impl Fn(B, &A) -> B,
-    ) -> B {
-        fa.fold_left(start, f)
-    }
+#[inline]
+pub fn fold_right<Kind: FoldableTy, A, B>(
+    _: Kind,
+    fa: impl FoldableInstance<A, Kind = Kind>,
+    start: B,
+    f: impl Fn(&A, B) -> B,
+) -> B {
+    fa.fold_right(start, f)
+}
 
-    #[inline]
-    pub fn fold_right<Kind: FoldableTy, A, B>(
-        _: Kind,
-        fa: impl FoldableInstance<A, Kind = Kind>,
-        start: B,
-        f: impl Fn(&A, B) -> B,
-    ) -> B {
-        fa.fold_right(start, f)
-    }
-
-    #[inline]
-    pub fn fold<Kind: FoldableTy, A: Monoid + Copy>(
-        // TODO remove the need for this Copy
-        _: Kind,
-        fa: impl FoldableInstance<A, Kind = Kind>,
-    ) -> A {
-        fa.fold_left(A::empty(), |acc, x| x.combine(acc))
-    }
+#[inline]
+pub fn fold<Kind: FoldableTy, A: Monoid + Copy>(
+    // TODO remove the need for this Copy
+    _: Kind,
+    fa: impl FoldableInstance<A, Kind = Kind>,
+) -> A {
+    fa.fold_left(A::empty(), |acc, x| x.combine(acc))
 }
 
 pub trait FoldableTy {
@@ -94,7 +90,7 @@ mod tests {
         let cloned = x.clone();
 
         assert_eq!(
-            foldable::fold(VecKind, x.clone()),
+            fold(VecKind, x.clone()),
             cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
         )
     }

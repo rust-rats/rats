@@ -1,21 +1,17 @@
-pub mod functor {
-    use super::*;
+#[inline]
+pub fn fmap<Kind: FunctorTy, A, B>(
+    _: Kind,
+    fa: impl FunctorInstance<A, Kind = Kind>,
+    f: impl Fn(&A) -> B,
+) -> Kind::Cons<B> {
+    fa.fmap(f)
+}
 
-    #[inline]
-    pub fn fmap<Kind: FunctorTy, A, B>(
-        _: Kind,
-        fa: impl FunctorInstance<A, Kind = Kind>,
-        f: impl Fn(&A) -> B,
-    ) -> Kind::Cons<B> {
-        fa.fmap(f)
-    }
-
-    pub fn lift<Kind: FunctorTy, A: FunctorInstance<T, Kind = Kind>, T, B>(
-        _: Kind,
-        fun: impl Fn(&T) -> B,
-    ) -> impl FnOnce(A) -> Kind::Cons<B> {
-        move |a: A| a.fmap(fun)
-    }
+pub fn lift<Kind: FunctorTy, A: FunctorInstance<T, Kind = Kind>, T, B>(
+    _: Kind,
+    fun: impl Fn(&T) -> B,
+) -> impl FnOnce(A) -> Kind::Cons<B> {
+    move |a: A| a.fmap(fun)
 }
 
 pub trait FunctorTy {
@@ -99,7 +95,7 @@ mod tests {
     fn do_you_even_lift() {
         let times_two = |x: &i32| x * 2;
 
-        let lifted_times_two = functor::lift(OptionKind, times_two);
+        let lifted_times_two = lift(OptionKind, times_two);
 
         let value = Some(2i32);
         assert_eq!(lifted_times_two(value), Some(4));

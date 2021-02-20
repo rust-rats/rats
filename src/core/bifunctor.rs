@@ -1,15 +1,11 @@
-pub mod bifunctor {
-    use super::*;
-
-    #[inline]
-    pub fn bimap<Kind: BifunctorTy, T1, T2, B, C>(
-        _: Kind,
-        fab: impl BifunctorInstance<T1, T2, Kind = Kind>,
-        f1: impl Fn(&T1) -> B,
-        f2: impl Fn(&T2) -> C,
-    ) -> Kind::Cons<B, C> {
-        fab.bimap(f1, f2)
-    }
+#[inline]
+pub fn bimap<Kind: BifunctorTy, T1, T2, B, C>(
+    _: Kind,
+    fab: impl BifunctorInstance<T1, T2, Kind = Kind>,
+    f1: impl Fn(&T1) -> B,
+    f2: impl Fn(&T2) -> C,
+) -> Kind::Cons<B, C> {
+    fab.bimap(f1, f2)
 }
 
 pub trait BifunctorTy {

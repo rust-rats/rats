@@ -1,13 +1,9 @@
-pub mod semigroupk {
-    use super::*;
-
-    pub fn combiane_k<Kind: SemigroupKTy, T>(
-        _: Kind,
-        this: Kind::Cons<T>,
-        other: Kind::Cons<T>,
-    ) -> Kind::Cons<T> {
-        this.combine_k(other)
-    }
+pub fn combiane_k<Kind: SemigroupKTy, T>(
+    _: Kind,
+    this: Kind::Cons<T>,
+    other: Kind::Cons<T>,
+) -> Kind::Cons<T> {
+    this.combine_k(other)
 }
 
 pub trait SemigroupKTy {

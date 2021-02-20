@@ -1,11 +1,7 @@
 use super::prelude::SemigroupKInstance;
 
-pub mod monoidk {
-    use super::*;
-
-    pub fn empty<Kind: MonoidKTy, T>(_: Kind) -> Kind::Cons<T> {
-        Kind::Cons::<T>::empty()
-    }
+pub fn empty<Kind: MonoidKTy, T>(_: Kind) -> Kind::Cons<T> {
+    Kind::Cons::<T>::empty()
 }
 
 pub trait MonoidKTy {

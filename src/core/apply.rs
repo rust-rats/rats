@@ -1,21 +1,17 @@
 use super::prelude::FunctorInstance;
 
-pub mod apply {
-    use super::*;
-
-    #[inline]
-    pub fn ap<Kind, F, A, B, K1>(
-        _: Kind,
-        fa: K1,
-        ff: <<K1 as ApplyInstance<A>>::Kind as ApplyTy>::Cons<F>,
-    ) -> Kind::Cons<B>
-    where
-        Kind: ApplyTy,
-        F: Fn(&A) -> B,
-        K1: ApplyInstance<A, Kind = Kind> + FunctorInstance<A, Kind = Kind>,
-    {
-        fa.apply(ff)
-    }
+#[inline]
+pub fn ap<Kind, F, A, B, K1>(
+    _: Kind,
+    fa: K1,
+    ff: <<K1 as ApplyInstance<A>>::Kind as ApplyTy>::Cons<F>,
+) -> Kind::Cons<B>
+where
+    Kind: ApplyTy,
+    F: Fn(&A) -> B,
+    K1: ApplyInstance<A, Kind = Kind> + FunctorInstance<A, Kind = Kind>,
+{
+    fa.apply(ff)
 }
 
 pub trait ApplyTy {
