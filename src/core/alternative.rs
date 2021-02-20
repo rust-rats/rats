@@ -3,11 +3,12 @@ use super::prelude::{ApplicativeInstance, MonoidKInstance};
 pub trait AlternativeTy {
     type Cons<T>: AlternativeInstance<T, Kind = Self>
         + MonoidKInstance<T, Kind = Self>
-        + ApplicativeInstance<Kind = Self>;
+        + ApplicativeInstance<T, Kind = Self>;
 }
 
 pub trait AlternativeInstance<T> {
-    type Kind: AlternativeTy;
+    #[rustfmt::skip]
+    type Kind: AlternativeTy<Cons<T> = Self>;
 }
 
 pub mod std_instances {

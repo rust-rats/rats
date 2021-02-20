@@ -14,11 +14,12 @@ pub mod flatmap {
 }
 
 pub trait FlatMapTy {
-    type Cons<T>: ApplicativeInstance<Kind = Self> + FlatMapInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<T, Kind = Self> + FlatMapInstance<T, Kind = Self>;
 }
 
 pub trait FlatMapInstance<T> {
-    type Kind: FlatMapTy;
+    #[rustfmt::skip]
+    type Kind: FlatMapTy<Cons<T> = Self>;
 
     fn flat_map<B>(
         self,

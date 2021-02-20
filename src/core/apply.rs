@@ -23,7 +23,8 @@ pub trait ApplyTy {
 }
 
 pub trait ApplyInstance<T> {
-    type Kind: ApplyTy;
+    #[rustfmt::skip]
+    type Kind: ApplyTy<Cons<T> = Self>;
 
     fn apply<B, F>(self, f: <Self::Kind as ApplyTy>::Cons<F>) -> <Self::Kind as ApplyTy>::Cons<B>
     where

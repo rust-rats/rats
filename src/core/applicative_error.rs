@@ -1,11 +1,12 @@
 use super::applicative::ApplicativeInstance;
 
 pub trait ApplicativeErrorTy {
-    type Cons<T>: ApplicativeErrorInstance<T, Kind = Self> + ApplicativeInstance<Kind = Self>;
+    type Cons<T>: ApplicativeErrorInstance<T, Kind = Self> + ApplicativeInstance<T, Kind = Self>;
 }
 
 pub trait ApplicativeErrorInstance<T> {
-    type Kind: ApplicativeErrorTy;
+    #[rustfmt::skip]
+    type Kind: ApplicativeErrorTy<Cons<T> = Self>;
     type ErrorT;
 
     fn handle_error_with(

@@ -16,7 +16,8 @@ pub trait BifunctorTy {
     type Cons<T1, T2>: BifunctorInstance<T1, T2>;
 }
 pub trait BifunctorInstance<T1, T2> {
-    type Kind: BifunctorTy;
+    #[rustfmt::skip]
+    type Kind: BifunctorTy<Cons<T1, T2> = Self>;
 
     fn bimap<B, C>(
         self,

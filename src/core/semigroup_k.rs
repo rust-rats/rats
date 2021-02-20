@@ -15,7 +15,8 @@ pub trait SemigroupKTy {
 }
 
 pub trait SemigroupKInstance<T> {
-    type Kind: SemigroupKTy;
+    #[rustfmt::skip]
+    type Kind: SemigroupKTy<Cons<T> = Self>;
 
     fn combine_k(
         self,

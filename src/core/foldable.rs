@@ -38,14 +38,15 @@ pub trait FoldableTy {
 }
 
 pub trait FoldableInstance<T> {
-    type Kind: FoldableTy;
+    #[rustfmt::skip]
+    type Kind: FoldableTy<Cons<T> = Self>;
 
     fn fold_left<B>(self, start: B, f: impl Fn(B, &T) -> B) -> B;
     fn fold_right<B>(self, start: B, f: impl Fn(&T, B) -> B) -> B;
 }
 
 pub mod std_instances {
-    use crate::core::prelude::VecKind;
+    use crate::core::prelude::{OptionKind, VecKind};
 
     use super::*;
 
@@ -66,8 +67,12 @@ pub mod std_instances {
         }
     }
 
+    impl FoldableTy for OptionKind {
+        type Cons<T> = Option<T>;
+    }
+
     impl<T> FoldableInstance<T> for Option<T> {
-        type Kind = VecKind;
+        type Kind = OptionKind;
 
         fn fold_left<B>(self, start: B, f: impl FnMut(B, &T) -> B) -> B {
             self.iter().fold(start, f)

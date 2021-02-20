@@ -23,7 +23,8 @@ pub trait FunctorTy {
 }
 
 pub trait FunctorInstance<T> {
-    type Kind: FunctorTy;
+    #[rustfmt::skip]
+    type Kind: FunctorTy<Cons<T> = Self>;
 
     fn fmap<B>(self, f: impl Fn(&T) -> B) -> <Self::Kind as FunctorTy>::Cons<B>;
 }

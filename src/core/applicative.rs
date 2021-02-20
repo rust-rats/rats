@@ -10,11 +10,12 @@ pub mod applicative {
 }
 
 pub trait ApplicativeTy {
-    type Cons<T>: ApplicativeInstance<Kind = Self> + ApplyInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<T, Kind = Self> + ApplyInstance<T, Kind = Self>;
 }
 
-pub trait ApplicativeInstance {
-    type Kind: ApplicativeTy;
+pub trait ApplicativeInstance<T> {
+    #[rustfmt::skip]
+    type Kind: ApplicativeTy<Cons<T> = Self>;
 
     fn pure<A>(value: A) -> <Self::Kind as ApplicativeTy>::Cons<A>;
 }
@@ -28,7 +29,7 @@ pub mod std_instances {
         type Cons<T> = Option<T>;
     }
 
-    impl<T> ApplicativeInstance for Option<T> {
+    impl<T> ApplicativeInstance<T> for Option<T> {
         type Kind = OptionKind;
 
         fn pure<A>(value: A) -> Option<A> {
@@ -39,7 +40,7 @@ pub mod std_instances {
     impl<E> ApplicativeTy for ResultKindOk<E> {
         type Cons<T> = Result<T, E>;
     }
-    impl<T, E> ApplicativeInstance for Result<T, E> {
+    impl<T, E> ApplicativeInstance<T> for Result<T, E> {
         type Kind = ResultKindOk<E>;
 
         fn pure<A>(value: A) -> Result<A, E> {
@@ -51,7 +52,7 @@ pub mod std_instances {
         type Cons<T> = Vec<T>;
     }
 
-    impl<T> ApplicativeInstance for Vec<T> {
+    impl<T> ApplicativeInstance<T> for Vec<T> {
         type Kind = VecKind;
 
         fn pure<A>(value: A) -> Vec<A> {

@@ -1,11 +1,12 @@
 use super::flatmap::FlatMapInstance;
 
 pub trait MonadTy {
-    type Cons<T>: MonadInstance<Kind = Self> + FlatMapInstance<T, Kind = Self>;
+    type Cons<T>: MonadInstance<T, Kind = Self> + FlatMapInstance<T, Kind = Self>;
 }
 
-pub trait MonadInstance {
-    type Kind: MonadTy;
+pub trait MonadInstance<T> {
+    #[rustfmt::skip]
+    type Kind: MonadTy<Cons<T> = Self>;
 }
 
 pub mod std_instances {
@@ -17,7 +18,7 @@ pub mod std_instances {
         type Cons<T> = Option<T>;
     }
 
-    impl<A> MonadInstance for Option<A> {
+    impl<A> MonadInstance<A> for Option<A> {
         type Kind = OptionKind;
     }
 
@@ -25,7 +26,7 @@ pub mod std_instances {
         type Cons<T> = Result<T, E>;
     }
 
-    impl<A, E> MonadInstance for Result<A, E> {
+    impl<A, E> MonadInstance<A> for Result<A, E> {
         type Kind = ResultKindOk<E>;
     }
 
@@ -33,7 +34,7 @@ pub mod std_instances {
         type Cons<T> = Vec<T>;
     }
 
-    impl<A> MonadInstance for Vec<A> {
+    impl<A> MonadInstance<A> for Vec<A> {
         type Kind = VecKind;
     }
 }

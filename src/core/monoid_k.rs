@@ -13,7 +13,8 @@ pub trait MonoidKTy {
 }
 
 pub trait MonoidKInstance<T> {
-    type Kind: MonoidKTy;
+    #[rustfmt::skip]
+    type Kind: MonoidKTy<Cons<T> = Self>;
 
     fn empty() -> <Self::Kind as MonoidKTy>::Cons<T>;
 }
