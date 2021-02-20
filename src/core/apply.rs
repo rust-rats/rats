@@ -1,9 +1,8 @@
 use super::prelude::FunctorInstance;
 
-#[derive(Copy, Clone)]
-pub struct Apply;
+pub mod apply {
+    use super::*;
 
-impl Apply {
     #[inline]
     pub fn ap<Kind, F, A, B, K1>(
         _: Kind,

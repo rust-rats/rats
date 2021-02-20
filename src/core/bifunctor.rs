@@ -1,7 +1,6 @@
-#[derive(Copy, Clone)]
-pub struct Bifunctor;
+pub mod bifunctor {
+    use super::*;
 
-impl Bifunctor {
     #[inline]
     pub fn bimap<Kind: BifunctorTy, T1, T2, B, C>(
         _: Kind,

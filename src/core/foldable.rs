@@ -1,9 +1,8 @@
 use crate::kernel::prelude::Monoid;
 
-#[derive(Copy, Clone, Default)]
-pub struct Foldable;
+pub mod foldable {
+    use super::*;
 
-impl Foldable {
     #[inline]
     pub fn fold_left<Kind: FoldableTy, A, B>(
         _: Kind,
@@ -90,7 +89,7 @@ mod tests {
         let cloned = x.clone();
 
         assert_eq!(
-            Foldable::fold(VecKind, x.clone()),
+            foldable::fold(VecKind, x.clone()),
             cloned.iter().fold(0i32, |acc, x| acc.wrapping_add(*x))
         )
     }

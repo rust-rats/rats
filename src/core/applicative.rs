@@ -1,9 +1,8 @@
 use super::prelude::ApplyInstance;
 
-#[derive(Copy, Clone)]
-pub struct Applicative;
+pub mod applicative {
+    use super::*;
 
-impl Applicative {
     #[inline]
     pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
         Kind::Cons::<A>::pure(value)

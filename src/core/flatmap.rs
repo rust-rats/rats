@@ -1,9 +1,8 @@
 use super::prelude::ApplicativeInstance;
 
-#[derive(Copy, Clone, Default)]
-pub struct FlatMap;
+pub mod flatmap {
+    use super::*;
 
-impl FlatMap {
     #[inline]
     pub fn flat_map<Kind: FlatMapTy, A, B>(
         _: Kind,

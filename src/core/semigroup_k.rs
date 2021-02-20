@@ -1,7 +1,6 @@
-#[derive(Clone, Copy)]
-pub struct SemigroupK;
+pub mod semigroupk {
+    use super::*;
 
-impl SemigroupK {
     pub fn combiane_k<Kind: SemigroupKTy, T>(
         _: Kind,
         this: Kind::Cons<T>,

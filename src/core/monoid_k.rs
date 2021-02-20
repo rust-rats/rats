@@ -1,9 +1,8 @@
 use super::prelude::SemigroupKInstance;
 
-#[derive(Copy, Clone, Default)]
-pub struct MonoidK;
+pub mod monoidk {
+    use super::*;
 
-impl MonoidK {
     pub fn empty<Kind: MonoidKTy, T>(_: Kind) -> Kind::Cons<T> {
         Kind::Cons::<T>::empty()
     }

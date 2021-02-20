@@ -1,7 +1,6 @@
-#[derive(Copy, Clone)]
-pub struct Functor;
+pub mod functor {
+    use super::*;
 
-impl Functor {
     #[inline]
     pub fn fmap<Kind: FunctorTy, A, B>(
         _: Kind,
@@ -99,7 +98,7 @@ mod tests {
     fn do_you_even_lift() {
         let times_two = |x: &i32| x * 2;
 
-        let lifted_times_two = Functor::lift(OptionKind, times_two);
+        let lifted_times_two = functor::lift(OptionKind, times_two);
 
         let value = Some(2i32);
         assert_eq!(lifted_times_two(value), Some(4));
