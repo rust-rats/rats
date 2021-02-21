@@ -1,17 +1,46 @@
-use super::prelude::SemigroupK;
+use super::prelude::SemigroupKInstance;
 
-pub trait MonoidK: SemigroupK {
-    fn empty() -> <Self as SemigroupK>::Outter<<Self as SemigroupK>::Inner>;
+pub fn empty<Kind: MonoidKTy, T>(_: Kind) -> Kind::Cons<T> {
+    Kind::Cons::<T>::empty()
 }
 
-impl<T> MonoidK for Option<T> {
-    fn empty() -> <Self as SemigroupK>::Outter<<Self as SemigroupK>::Inner> {
-        None
+pub trait MonoidKTy {
+    type Cons<T>: MonoidKInstance<T, Kind = Self> + SemigroupKInstance<T, Kind = Self>;
+}
+
+pub trait MonoidKInstance<T> {
+    #[rustfmt::skip]
+    type Kind: MonoidKTy<Cons<T> = Self>;
+
+    fn empty() -> <Self::Kind as MonoidKTy>::Cons<T>;
+}
+
+pub mod std_instances {
+    use crate::core::prelude::{OptionKind, VecKind};
+
+    use super::*;
+
+    impl MonoidKTy for OptionKind {
+        type Cons<T> = Option<T>;
     }
-}
 
-impl<T> MonoidK for Vec<T> {
-    fn empty() -> <Self as SemigroupK>::Outter<<Self as SemigroupK>::Inner> {
-        vec![]
+    impl<T> MonoidKInstance<T> for Option<T> {
+        type Kind = OptionKind;
+
+        fn empty() -> Option<T> {
+            None
+        }
+    }
+
+    impl MonoidKTy for VecKind {
+        type Cons<T> = Vec<T>;
+    }
+
+    impl<T> MonoidKInstance<T> for Vec<T> {
+        type Kind = VecKind;
+
+        fn empty() -> Vec<T> {
+            vec![]
+        }
     }
 }

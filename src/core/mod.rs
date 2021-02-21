@@ -1,5 +1,6 @@
 pub mod alternative;
 pub mod applicative;
+pub mod applicative_error;
 pub mod apply;
 pub mod bifunctor;
 pub mod flatmap;
@@ -17,12 +18,17 @@ pub mod std_kinds {
     #[derive(Copy, Clone, Default)]
     pub struct OptionKind;
     #[derive(Copy, Clone, Default)]
-    pub struct ResultKind<E>(PhantomData<E>);
+    pub struct ResultKindOk<E>(PhantomData<E>);
+    #[derive(Copy, Clone, Default)]
+    pub struct ResultKind;
+    #[derive(Copy, Clone, Default)]
+    pub struct Tuple2Kind;
 }
 
 pub mod prelude {
     pub use super::alternative::*;
     pub use super::applicative::*;
+    pub use super::applicative_error::*;
     pub use super::apply::*;
     pub use super::bifunctor::*;
     pub use super::flatmap::*;

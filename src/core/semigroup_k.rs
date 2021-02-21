@@ -1,41 +1,71 @@
-pub trait SemigroupK {
-    type Inner;
-    type Outter<B>: SemigroupK;
-
-    fn combine_k(self, other: Self::Outter<Self::Inner>) -> Self::Outter<Self::Inner>;
+pub fn combiane_k<Kind: SemigroupKTy, T>(
+    _: Kind,
+    this: Kind::Cons<T>,
+    other: Kind::Cons<T>,
+) -> Kind::Cons<T> {
+    this.combine_k(other)
 }
 
-impl<T> SemigroupK for Option<T> {
-    type Inner = T;
-    type Outter<B> = Option<T>;
+pub trait SemigroupKTy {
+    type Cons<T>: SemigroupKInstance<T, Kind = Self>;
+}
 
-    fn combine_k(self, other: Self::Outter<Self::Inner>) -> Self::Outter<Self::Inner> {
-        self.or(other)
+pub trait SemigroupKInstance<T> {
+    #[rustfmt::skip]
+    type Kind: SemigroupKTy<Cons<T> = Self>;
+
+    fn combine_k(
+        self,
+        other: <Self::Kind as SemigroupKTy>::Cons<T>,
+    ) -> <Self::Kind as SemigroupKTy>::Cons<T>;
+}
+
+pub mod std_instances {
+    use crate::core::prelude::{OptionKind, ResultKindOk, VecKind};
+
+    use super::*;
+
+    impl SemigroupKTy for OptionKind {
+        type Cons<T> = Option<T>;
     }
-}
 
-impl<T, E> SemigroupK for Result<T, E> {
-    type Inner = T;
-    type Outter<B> = Result<B, E>;
+    impl<T> SemigroupKInstance<T> for Option<T> {
+        type Kind = OptionKind;
 
-    fn combine_k(self, other: Self::Outter<Self::Inner>) -> Self::Outter<Self::Inner> {
-        self.or(other)
+        fn combine_k(self, other: Option<T>) -> Option<T> {
+            self.or(other)
+        }
     }
-}
 
-impl<T> SemigroupK for Vec<T> {
-    type Inner = T;
-    type Outter<B> = Vec<B>;
+    impl<E> SemigroupKTy for ResultKindOk<E> {
+        type Cons<T> = Result<T, E>;
+    }
 
-    fn combine_k(mut self, mut other: Self::Outter<Self::Inner>) -> Self::Outter<Self::Inner> {
-        self.append(&mut other);
-        self
+    impl<T, E> SemigroupKInstance<T> for Result<T, E> {
+        type Kind = ResultKindOk<E>;
+
+        fn combine_k(self, other: Result<T, E>) -> Result<T, E> {
+            self.or(other)
+        }
+    }
+
+    impl SemigroupKTy for VecKind {
+        type Cons<T> = Vec<T>;
+    }
+
+    impl<T> SemigroupKInstance<T> for Vec<T> {
+        type Kind = VecKind;
+
+        fn combine_k(mut self, mut other: Vec<T>) -> Vec<T> {
+            self.append(&mut other);
+            self
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::SemigroupK;
+    use super::*;
 
     #[test]
     fn semigroup_k_option_is_first_success() {

@@ -1,51 +1,74 @@
-pub trait Functor {
-    type Inner;
-    type Outter<B>: Functor;
-
-    fn fmap<F, B>(self, f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B;
+#[inline]
+pub fn fmap<Kind: FunctorTy, A, B>(
+    _: Kind,
+    fa: impl FunctorInstance<A, Kind = Kind>,
+    f: impl Fn(&A) -> B,
+) -> Kind::Cons<B> {
+    fa.fmap(f)
 }
 
-impl<A> Functor for Option<A> {
-    type Inner = A;
-    type Outter<B> = Option<B>;
+pub fn lift<Kind: FunctorTy, A: FunctorInstance<T, Kind = Kind>, T, B>(
+    _: Kind,
+    fun: impl Fn(&T) -> B,
+) -> impl FnOnce(A) -> Kind::Cons<B> {
+    move |a: A| a.fmap(fun)
+}
 
-    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B,
-    {
-        match self {
-            Some(v) => Some(f(v)),
-            None => None,
+pub trait FunctorTy {
+    type Cons<T>: FunctorInstance<T, Kind = Self>;
+}
+
+pub trait FunctorInstance<T> {
+    #[rustfmt::skip]
+    type Kind: FunctorTy<Cons<T> = Self>;
+
+    fn fmap<B>(self, f: impl Fn(&T) -> B) -> <Self::Kind as FunctorTy>::Cons<B>;
+}
+
+pub mod std_instances {
+    use super::*;
+    use crate::core::prelude::{OptionKind, ResultKindOk, VecKind};
+
+    impl FunctorTy for OptionKind {
+        type Cons<T> = Option<T>;
+    }
+
+    impl<A> FunctorInstance<A> for Option<A> {
+        type Kind = OptionKind;
+
+        fn fmap<B>(self, f: impl FnOnce(&A) -> B) -> Option<B> {
+            match self {
+                Some(v) => Some(f(&v)),
+                None => None,
+            }
         }
     }
-}
 
-impl<A, E> Functor for Result<A, E> {
-    type Inner = A;
-    type Outter<B> = Result<B, E>;
+    impl FunctorTy for VecKind {
+        type Cons<T> = Vec<T>;
+    }
 
-    fn fmap<F, B>(self, mut f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B,
-    {
-        match self {
-            Ok(v) => Ok(f(v)),
-            Err(e) => Err(e),
+    impl<A> FunctorInstance<A> for Vec<A> {
+        type Kind = VecKind;
+
+        fn fmap<B>(self, f: impl FnMut(&A) -> B) -> Vec<B> {
+            self.iter().map(f).collect()
         }
     }
-}
 
-impl<A> Functor for Vec<A> {
-    type Inner = A;
-    type Outter<B> = Vec<B>;
+    impl<E> FunctorTy for ResultKindOk<E> {
+        type Cons<T> = Result<T, E>;
+    }
 
-    fn fmap<F, B>(self, f: F) -> Self::Outter<B>
-    where
-        F: FnMut(Self::Inner) -> B,
-    {
-        self.into_iter().map(f).collect()
+    impl<A, E> FunctorInstance<A> for Result<A, E> {
+        type Kind = ResultKindOk<E>;
+
+        fn fmap<B>(self, f: impl FnOnce(&A) -> B) -> Result<B, E> {
+            match self {
+                Ok(v) => Ok(f(&v)),
+                Err(e) => Err(e),
+            }
+        }
     }
 }
 
@@ -63,37 +86,19 @@ impl<A> Functor for Vec<A> {
 // }
 //
 
-pub fn lift<A: Functor, B>(
-    fun: impl FnMut(<A as Functor>::Inner) -> B + Copy,
-) -> impl FnMut(A) -> <A as Functor>::Outter<B> {
-    move |a: A| a.fmap(fun)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::std_kinds::*;
 
     #[test]
     fn do_you_even_lift() {
-        let times_two = |x: i32| x * 2;
-        let times_two_ref = |x: &i32| x * 2;
+        let times_two = |x: &i32| x * 2;
 
-        fn plus_one(x: i32) -> i32 {
-            x + 1
-        }
-
-        let mut lifted_times_two = lift(times_two);
-        let mut lifted_plus_one = lift(plus_one);
+        let lifted_times_two = lift(OptionKind, times_two);
 
         let value = Some(2i32);
         assert_eq!(lifted_times_two(value), Some(4));
-        {
-            // needs new scope to make sure the lifted function
-            // does not outlive the parameter
-            let mut lifted_times_two_ref = lift(times_two_ref);
-            assert_eq!(lifted_times_two_ref(value.as_ref()), Some(4));
-        }
-        assert_eq!(lifted_plus_one(value), Some(3));
     }
 }
 
@@ -114,10 +119,11 @@ mod laws {
             #[quickcheck]
             fn $name(n1: $t) -> bool {
                 use crate::core::prelude::*;
-                use std::convert::identity;
                 let n1_copy = n1.clone();
 
-                let left = n1.fmap(identity);
+                // we have to use clone as identity
+                // because the function receives a ref
+                let left = n1.fmap(Clone::clone);
                 let right = n1_copy;
 
                 left == right
@@ -132,36 +138,35 @@ mod laws {
     }
 
     mod composition_identity {
-        use super::*;
 
         #[quickcheck]
         fn composition_identity_vec_usize(vec: Vec<usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| (a / 5) * 2;
-            let f2 = |a: usize| (a / 5) * 3;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
             let vec_copy = vec.clone();
 
-            assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(f1(a))))
+            assert_eq!(vec.fmap(f1).fmap(f2), vec_copy.fmap(|a| f2(&f1(a))))
         }
 
         #[quickcheck]
         fn composition_identity_option_usize(opt: Option<usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| (a / 5) * 2;
-            let f2 = |a: usize| (a / 5) * 3;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
             let opt_copy = opt;
 
-            assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(f1(a))))
+            assert_eq!(opt.fmap(f1).fmap(f2), opt_copy.fmap(|a| f2(&f1(a))))
         }
 
         #[quickcheck]
         fn composition_identity_result_usize_usize(res: Result<usize, usize>) {
             use crate::core::prelude::*;
-            let f1 = |a: usize| (a / 5) * 2;
-            let f2 = |a: usize| (a / 5) * 3;
+            let f1 = |a: &usize| (a / 5) * 2;
+            let f2 = |a: &usize| (a / 5) * 3;
             let res_copy = res;
 
-            assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(f1(a))))
+            assert_eq!(res.fmap(f1).fmap(f2), res_copy.fmap(|a| f2(&f1(a))))
         }
     }
 }

@@ -1,42 +1,56 @@
-pub trait Bifunctor {
-    type Inner1;
-    type Inner2;
-    type Outter<B1, C1>: Bifunctor;
-
-    fn bimap<F1, F2, B, C>(self, f1: F1, f2: F2) -> Self::Outter<B, C>
-    where
-        F1: FnMut(Self::Inner1) -> B,
-        F2: FnMut(Self::Inner2) -> C;
+#[inline]
+pub fn bimap<Kind: BifunctorTy, T1, T2, B, C>(
+    _: Kind,
+    fab: impl BifunctorInstance<T1, T2, Kind = Kind>,
+    f1: impl Fn(&T1) -> B,
+    f2: impl Fn(&T2) -> C,
+) -> Kind::Cons<B, C> {
+    fab.bimap(f1, f2)
 }
 
-impl<T1, T2> Bifunctor for (T1, T2) {
-    type Inner1 = T1;
+pub trait BifunctorTy {
+    type Cons<T1, T2>: BifunctorInstance<T1, T2>;
+}
+pub trait BifunctorInstance<T1, T2> {
+    #[rustfmt::skip]
+    type Kind: BifunctorTy<Cons<T1, T2> = Self>;
 
-    type Inner2 = T2;
+    fn bimap<B, C>(
+        self,
+        f1: impl Fn(&T1) -> B,
+        f2: impl Fn(&T2) -> C,
+    ) -> <Self::Kind as BifunctorTy>::Cons<B, C>;
+}
 
-    type Outter<B, C> = (B, C);
+pub mod std_instances {
+    use crate::core::prelude::{ResultKind, Tuple2Kind};
 
-    fn bimap<F1, F2, B, C>(self, mut f1: F1, mut f2: F2) -> Self::Outter<B, C>
-    where
-        F1: FnMut(Self::Inner1) -> B,
-        F2: FnMut(Self::Inner2) -> C,
-    {
-        (f1(self.0), f2(self.1))
+    use super::*;
+
+    impl BifunctorTy for Tuple2Kind {
+        type Cons<T1, T2> = (T1, T2);
     }
-}
 
-impl<T1, T2> Bifunctor for Result<T1, T2> {
-    type Inner1 = T1;
+    impl<T1, T2> BifunctorInstance<T1, T2> for (T1, T2) {
+        type Kind = Tuple2Kind;
 
-    type Inner2 = T2;
+        fn bimap<B, C>(self, f1: impl FnOnce(&T1) -> B, f2: impl FnOnce(&T2) -> C) -> (B, C) {
+            (f1(&self.0), f2(&self.1))
+        }
+    }
 
-    type Outter<B, C> = Result<B, C>;
+    impl BifunctorTy for ResultKind {
+        type Cons<T1, T2> = Result<T1, T2>;
+    }
 
-    fn bimap<F1, F2, B, C>(self, f1: F1, f2: F2) -> Self::Outter<B, C>
-    where
-        F1: FnMut(Self::Inner1) -> B,
-        F2: FnMut(Self::Inner2) -> C,
-    {
-        self.map(f1).map_err(f2)
+    impl<T1, T2> BifunctorInstance<T1, T2> for Result<T1, T2> {
+        type Kind = ResultKind;
+
+        fn bimap<B, C>(self, f1: impl FnOnce(&T1) -> B, f2: impl FnOnce(&T2) -> C) -> Result<B, C> {
+            match self {
+                Ok(ok) => Ok(f1(&ok)),
+                Err(err) => Err(f2(&err)),
+            }
+        }
     }
 }
