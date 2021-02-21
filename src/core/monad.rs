@@ -1,7 +1,15 @@
-use super::flatmap::FlatMapInstance;
+use super::{
+    applicative::ApplicativeInstance,
+    flatmap::FlatMapInstance,
+    prelude::{ApplyInstance, FunctorInstance},
+};
 
 pub trait MonadTy {
-    type Cons<T>: MonadInstance<T, Kind = Self> + FlatMapInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<T, Kind = Self>
+        + FunctorInstance<T, Kind = Self>
+        + ApplyInstance<T, Kind = Self>
+        + MonadInstance<T, Kind = Self>
+        + FlatMapInstance<T, Kind = Self>;
 }
 
 pub trait MonadInstance<T> {

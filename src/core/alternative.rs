@@ -1,8 +1,9 @@
-use super::prelude::{ApplicativeInstance, MonoidKInstance};
+use super::prelude::{ApplicativeInstance, MonoidKInstance, SemigroupKInstance};
 
 pub trait AlternativeTy {
     type Cons<T>: AlternativeInstance<T, Kind = Self>
         + MonoidKInstance<T, Kind = Self>
+        + SemigroupKInstance<T, Kind = Self>
         + ApplicativeInstance<T, Kind = Self>;
 }
 

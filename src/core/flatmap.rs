@@ -1,4 +1,4 @@
-use super::prelude::ApplicativeInstance;
+use super::prelude::{ApplicativeInstance, FunctorInstance};
 
 #[inline]
 pub fn flat_map<Kind: FlatMapTy, A, B>(
@@ -10,7 +10,9 @@ pub fn flat_map<Kind: FlatMapTy, A, B>(
 }
 
 pub trait FlatMapTy {
-    type Cons<T>: ApplicativeInstance<T, Kind = Self> + FlatMapInstance<T, Kind = Self>;
+    type Cons<T>: FunctorInstance<T, Kind = Self>
+        + ApplicativeInstance<T, Kind = Self>
+        + FlatMapInstance<T, Kind = Self>;
 }
 
 pub trait FlatMapInstance<T> {

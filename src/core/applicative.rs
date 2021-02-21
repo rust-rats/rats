@@ -1,4 +1,4 @@
-use super::prelude::ApplyInstance;
+use super::prelude::{ApplyInstance, FunctorInstance};
 
 #[inline]
 pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
@@ -6,7 +6,9 @@ pub fn pure<Kind: ApplicativeTy, A>(_: Kind, value: A) -> Kind::Cons<A> {
 }
 
 pub trait ApplicativeTy {
-    type Cons<T>: ApplicativeInstance<T, Kind = Self> + ApplyInstance<T, Kind = Self>;
+    type Cons<T>: ApplicativeInstance<T, Kind = Self>
+        + ApplyInstance<T, Kind = Self>
+        + FunctorInstance<T, Kind = Self>;
 }
 
 pub trait ApplicativeInstance<T> {
