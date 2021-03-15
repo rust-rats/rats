@@ -11,5 +11,5 @@ edition = "2018"
 [dev-dependencies]
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-paste = "1.0.4"
+paste = "1.0.5"
 float-cmp = "0.8.0"
