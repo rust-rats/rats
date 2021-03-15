@@ -15,10 +15,7 @@ impl<A> Functor for Option<A> {
     where
         F: FnMut(Self::Inner) -> B,
     {
-        match self {
-            Some(v) => Some(f(v)),
-            None => None,
-        }
+        self.map(|v| f(v))
     }
 }
 
